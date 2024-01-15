@@ -10,9 +10,7 @@ defineOptions({
 
 <template>
   <div class="base-map-container">
-    <div class="left-box">
-      1
-    </div>
+    <div class="left-box">1</div>
     <div class="right-box">
       <OlMap />
     </div>
@@ -20,15 +18,15 @@ defineOptions({
 </template>
 
 <style lang="scss" scoped>
-.base-map-container{
+.base-map-container {
   padding: 10px;
   padding-bottom: 0;
   box-sizing: border-box;
   display: flex;
-  .left-box{
+  .left-box {
     width: 180px;
   }
-  .right-box{
+  .right-box {
     flex: 1;
   }
 }
