@@ -6,7 +6,8 @@
 
 ## ⚡ 简介
 
-基于V3 Admin Vite基础前端架构，学习了解开源框架的同时，增加界面，以便学习使用openlayer。
+`基于V3 Admin Vite基础前端架构，学习了解开源框架的同时，增加界面，以便学习使用openlayer。`
+
 V3 Admin Vite 是一个免费开源的中后台管理系统基础解决方案，基于 Vue3、TypeScript、Element Plus、Pinia 和 Vite 等主流技术
 
 - Vue Cli 5.x 版: [v3-admin](https://github.com/un-pany/v3-admin)
