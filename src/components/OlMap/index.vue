@@ -2,7 +2,9 @@
 import "ol/ol.css";
 import Map from "ol/Map";
 import XYZ from "ol/source/XYZ";
+import {getTileLayer,MapTypeProject,isMapEPSG3857} from './tileLayerConifg'
 import OSM from "ol/source/OSM";
+import { fromLonLat, Projection, transform } from "ol/proj";
 import TileLayer from "ol/layer/Tile";
 import View from "ol/View";
 import { reactive, ref, watch,onMounted } from "vue"
@@ -11,31 +13,35 @@ defineOptions({
   // 命名当前组件
   name: "OlMap"
 })
-const gaodeMapLayer = new TileLayer({
-    title: "高德地图",
-    source: new XYZ({
-        url: 'http://wprd0{1-4}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&style=7&x={x}&y={y}&z={z}',
-        wrapX: false
-    })
-});
-const initMap = () => {
-  const map = new Map({
+const props = defineProps({
+  // mapType:{
+  //   type: String, // 类型
+  //   required: false, // 是否必传
+  //   default: 'tianditu' //值 ‘gaode’,'baidu','tianditu','custom'
+  // },
+})
+let OlMapObj:any = null;
+const initMap = (mapType: string = 'tianditu') => {
+  if(OlMapObj) OlMapObj.destroy()
+  OlMapObj = new Map({
     target: "map",
-    layers: [
-
-      gaodeMapLayer
-    ],
+    layers: getTileLayer(mapType),
     view: new View({
-      center: [1, 0],
-      projection: 'EPSG:3857',
-      zoom: 1,
+      center: (isMapEPSG3857(mapType))?fromLonLat([114.338252,30.532406]):[114.338252,30.532406],
+      projection: MapTypeProject[mapType],
+      zoom:18,
+      maxZoom:19,
       minZoom:1
     })
   });
-  return map;
 }
 onMounted(()=>{
-  initMap()
+  // initMap()
+  // console.log(OlMapObj)
+})
+
+defineExpose({
+  initMap
 })
 </script>
 
