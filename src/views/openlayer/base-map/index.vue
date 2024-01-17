@@ -22,7 +22,8 @@ onMounted(()=>{
       <el-divider>
         第三方地图
       </el-divider>
-      <p>天地图和百度地图，高德地图，经纬度坐标需要相互转换;如果是在EPSG:4236上渲染的，还需要再通过openlayer提供方法转一次，一般在实际开发中，经纬度坐标系统一</p>
+      <!-- <p>天地图和百度地图，高德地图，经纬度坐标需要相互转换;如果是在EPSG:4236上渲染的，还需要再通过openlayer提供方法转一次，一般在实际开发中，经纬度坐标系统一</p> -->
+      <p>可以切换地图底图</p>
       <div class="line">
         <el-button size="large" type="primary" @click="loadMap('tianditu')">天地图</el-button>
       </div>
