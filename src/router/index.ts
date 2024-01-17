@@ -81,11 +81,11 @@ export const constantRoutes: RouteRecordRaw[] = [
         }
       },
       {
-        path: "render-point",
-        component: () => import("@/views/openlayer/render-point/index.vue"),
-        name: "OpenLayerRendenPoint",
+        path: "render-vector",
+        component: () => import("@/views/openlayer/render-vector/index.vue"),
+        name: "OpenLayerRendenVector",
         meta: {
-          title: "点渲染",
+          title: "标注渲染",
           keepAlive: true
         }
       },
