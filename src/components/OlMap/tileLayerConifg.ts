@@ -44,6 +44,7 @@ export const getTileLayer = (type='tianditu',customObj=null)=>{
   switch (type) {
     case MapType.GD:
       tileLayer = new TileLayer({
+        className:'underlay-map-container',
         source: new Source.XYZ({
           crossOrigin: 'Anonymous', //  "Anonymous"（即允许对未经过验证的图像进行跨源下载）
           url: 'http://wprd0{1-4}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&style=7&x={x}&y={y}&z={z}',
@@ -55,12 +56,14 @@ export const getTileLayer = (type='tianditu',customObj=null)=>{
     case MapType.BD:
       const baiduSource = getBaiduSource();
       tileLayer = new TileLayer({
+        className:'underlay-map-container',
         source: baiduSource,
       })
       tileLayerArr = [tileLayer];
       break;
     case MapType.TDT:
       let tileLayerVec = new TileLayer({
+        className:'underlay-map-container',
         source: new Source.XYZ({
           crossOrigin: 'Anonymous',
           url: 'http://t0.tianditu.com/DataServer?T=vec_w&x={x}&y={y}&l={z}&tk=bc15a8dd532a9027225c6e572c73433c',
@@ -78,6 +81,7 @@ export const getTileLayer = (type='tianditu',customObj=null)=>{
       break;
     case MapType.CUSTOM:
       tileLayer = new TileLayer({
+        className:'underlay-map-container',
         source: new Source.XYZ({
           crossOrigin: 'Anonymous', //  "Anonymous"（即允许对未经过验证的图像进行跨源下载）
           url: 'http://10.168.4.101:10002/spatio/wuhan/{z}/{x}/{y}.jpg',
@@ -88,6 +92,7 @@ export const getTileLayer = (type='tianditu',customObj=null)=>{
       break;
     default:
       tileLayer = new TileLayer({
+        className:'underlay-map-container',
         source: new OSM()
       })
       tileLayerArr = [tileLayer];

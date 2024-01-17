@@ -22,7 +22,18 @@ const props = defineProps({
 })
 let OlMapObj:any = null;
 const initMap = (mapType: string = 'tianditu') => {
-  if(OlMapObj) OlMapObj.destroy()
+  if(OlMapObj){
+    // 如果存在地图，把前面的图层替换掉，无需重新加载
+    OlMapObj.setLayers(getTileLayer(mapType));
+    OlMapObj.setView(new View({
+      center: (isMapEPSG3857(mapType))?fromLonLat([114.338252,30.532406]):[114.338252,30.532406],
+      projection: MapTypeProject[mapType],
+      zoom:18,
+      maxZoom:19,
+      minZoom:1
+    }))
+    return
+  }
   OlMapObj = new Map({
     target: "map",
     layers: getTileLayer(mapType),

@@ -12,7 +12,7 @@ const loadMap = (type:any)=>{
   OlMapRef.value?.initMap(type)
 }
 onMounted(()=>{
-
+  loadMap('tianditu')
 })
 </script>
 
@@ -22,6 +22,7 @@ onMounted(()=>{
       <el-divider>
         第三方地图
       </el-divider>
+      <p>天地图和百度地图，高德地图，经纬度坐标需要相互转换;如果是在EPSG:4236上渲染的，还需要再通过openlayer提供方法转一次，一般在实际开发中，经纬度坐标系统一</p>
       <div class="line">
         <el-button size="large" type="primary" @click="loadMap('tianditu')">天地图</el-button>
       </div>
@@ -33,9 +34,6 @@ onMounted(()=>{
       </div>
       <div class="line">
         <el-button size="large" type="primary" @click="loadMap('custom')">自定义</el-button>
-      </div>
-      <div class="line">
-        <el-button size="large" type="primary">加载多个地图</el-button>
       </div>
     </div>
     <div class="right-box">
@@ -73,3 +71,5 @@ onMounted(()=>{
   }
 }
 </style>
+
+
