@@ -83,7 +83,7 @@ export const constantRoutes: RouteRecordRaw[] = [
       {
         path: "render-vector",
         component: () => import("@/views/openlayer/render-vector/index.vue"),
-        name: "OpenLayerRendenVector",
+        name: "OpenLayerRenderVector",
         meta: {
           title: "标注渲染",
           keepAlive: true
