@@ -15,7 +15,7 @@ const MapType = {
 export const MapTypeProject = {
   [MapType.GD]:'EPSG:3857',
   [MapType.BD]:'EPSG:3857',
-  [MapType.TDT]:'EPSG:4326',
+  [MapType.TDT]:'EPSG:3857',
   [MapType.CUSTOM]:'EPSG:4326',
 }
 

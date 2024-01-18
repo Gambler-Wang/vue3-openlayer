@@ -1,15 +1,33 @@
 <script lang="ts" setup>
 import { reactive, ref, watch,onMounted } from "vue"
+import positionPic from "@/assets/map/position.png?url"
 import OlMap from "@/components/OlMap/index.vue"
-
 defineOptions({
   // 命名当前组件
   name: "OpenLayerRenderVector"
 })
 /** 滚动条内容元素的引用 */
 const OlMapRef = ref<InstanceType<typeof OlMap> | null>(null)
+const coordinateInput = ref<string>('116.3958,39.9219')
+const textInput = ref<string>('测试')
+const iconUrlInput = ref<string>('')
 const loadMap = (type:any)=>{
   OlMapRef.value?.initMap(type)
+}
+// 添加图片标注
+const addPicLabel = () =>{
+  const coordinate = coordinateInput.value.split(',')
+  OlMapRef.value?.addPicLabel({
+    id: '1',
+    name: textInput.value || '测试',
+    lng: Number(coordinate[0]),
+    lat: Number(coordinate[1]),
+    url: iconUrlInput || positionPic,
+  })
+}
+// 添加文字标注
+const addTxtLabel = ()=>{
+
 }
 onMounted(()=>{
   loadMap('tianditu')
@@ -24,16 +42,31 @@ onMounted(()=>{
       </el-divider>
       <p>可以切换查看渲染</p>
       <div class="line">
-        <el-button size="large" type="primary" @click="loadMap('tianditu')">天地图</el-button>
+        坐标：
+        <el-input v-model="coordinateInput"></el-input>
       </div>
       <div class="line">
-        <el-button size="large" type="primary" @click="loadMap('gaode')">高德地图</el-button>
+        文字：
+        <el-input v-model="textInput"></el-input>
       </div>
       <div class="line">
-        <el-button size="large" type="primary" @click="loadMap('baidu')">百度地图</el-button>
+        点链接:
+        <el-input v-model="iconUrlInput"></el-input>
       </div>
       <div class="line">
-        <el-button size="large" type="primary" @click="loadMap('custom')">自定义</el-button>
+        <el-button type="primary" @click="addPicLabel">图片标注</el-button>
+      </div>
+      <div class="line">
+        <el-button size="large" type="primary" @click="addTxtLabel">文字标注</el-button>
+      </div>
+      <div class="line">
+        <el-button size="large" type="primary" @click="loadMap('baidu')">图文标注</el-button>
+      </div>
+      <div class="line">
+        <el-button size="large" type="primary" @click="loadMap('custom')">聚合标注</el-button>
+      </div>
+      <div class="line">
+        <el-button size="large" type="primary" @click="loadMap('custom')">popup弹出窗</el-button>
       </div>
     </div>
     <div class="right-box">

@@ -1,13 +1,16 @@
 <script lang="ts" setup>
-import "ol/ol.css";
-import Map from "ol/Map";
-import XYZ from "ol/source/XYZ";
-import {getTileLayer,MapTypeProject,isMapEPSG3857} from './tileLayerConifg'
-import OSM from "ol/source/OSM";
-import { fromLonLat, Projection, transform } from "ol/proj";
-import TileLayer from "ol/layer/Tile";
-import View from "ol/View";
-import { reactive, ref, watch,onMounted } from "vue"
+import "ol/ol.css"
+import Map from "ol/Map"
+import Feature from 'ol/feature'
+import View from "ol/View"
+import * as Source from 'ol/source'
+import * as OlStyle from 'ol/style'
+import * as Geom from 'ol/geom'
+import * as Layer from "ol/layer"
+import { getTileLayer, MapTypeProject, isMapEPSG3857 } from "./tileLayerConifg"
+import { PointDataInterface } from "./customInterface"
+import { fromLonLat, Projection, transform } from "ol/proj"
+import { reactive, ref, watch, onMounted } from "vue"
 
 defineOptions({
   // 命名当前组件
@@ -20,39 +23,94 @@ const props = defineProps({
   //   default: 'tianditu' //值 ‘gaode’,'baidu','tianditu','custom'
   // },
 })
-let OlMapObj:any = null;
-const initMap = (mapType: string = 'tianditu') => {
-  if(OlMapObj){
+let OlMapObj: any = null
+let currentMapType:string = 'tianditu'
+
+// 初始化地图
+const initMap = (mapType: string = "tianditu") => {
+  currentMapType = mapType
+  if (OlMapObj) {
     // 如果存在地图，把前面的图层替换掉，无需重新加载
-    OlMapObj.setLayers(getTileLayer(mapType));
-    OlMapObj.setView(new View({
-      center: (isMapEPSG3857(mapType))?fromLonLat([114.338252,30.532406]):[114.338252,30.532406],
-      projection: MapTypeProject[mapType],
-      zoom:18,
-      maxZoom:19,
-      minZoom:1
-    }))
+    OlMapObj.setLayers(getTileLayer(currentMapType))
+    OlMapObj.setView(
+      new View({
+        center: trCoordSystem([116.411794, 39.9068]),
+        projection: MapTypeProject[currentMapType],
+        zoom: 18,
+        maxZoom: 19,
+        minZoom: 1
+      })
+    )
     return
   }
   OlMapObj = new Map({
     target: "map",
-    layers: getTileLayer(mapType),
+    layers: getTileLayer(currentMapType),
     view: new View({
-      center: (isMapEPSG3857(mapType))?fromLonLat([114.338252,30.532406]):[114.338252,30.532406],
-      projection: MapTypeProject[mapType],
-      zoom:18,
-      maxZoom:19,
-      minZoom:1
+      center: trCoordSystem([116.411794, 39.9068]),
+      projection: MapTypeProject[currentMapType],
+      zoom: 5,
+      maxZoom: 19,
+      minZoom: 1
     })
+  })
+}
+// 增加图片标注
+const addPicLabel = (obj: PointDataInterface) => {
+  // 增加openlayer图片标注的代码
+  const pointCoord:Array<Number> = [obj.lng, obj.lat]
+  // 矢量标注要素
+  let iconFeature = createPoint(pointCoord)
+  let labelStyle =  new OlStyle.Style({
+    image:createIcon(obj.url)
+  })
+  iconFeature.setStyle(labelStyle);
+  //矢量标注的数据源
+  let vectorSource = new Source.Vector({
+    features: [iconFeature]
+  });
+  //矢量标注图层
+  let vectorLayer = new Layer.Vector({
+      source: vectorSource
+  });
+  OlMapObj.addLayer(vectorLayer);
+}
+
+// 创建点数据
+var createPoint = (arr:Array<Number>)=>{
+  return new Feature({
+    geometry: new Geom.Point(trCoordSystem(arr))
   });
 }
-onMounted(()=>{
+
+// 创建图标
+var createIcon = (url:any) => {
+ return new OlStyle.Icon({
+    anchor: [0.5,1],
+    anchorOrigin: "top-right",
+    anchorXUnits: "fraction",
+    anchorYUnits: "fraction",
+    offsetOrigin: "top-right",
+    //透明度
+    opacity: 0.75,
+    //图标的url
+    src: url
+  })
+}
+
+// 返回对应坐标系的点位
+var trCoordSystem = (coordinate: (number)[]) => {
+  return isMapEPSG3857(currentMapType) ? fromLonLat(coordinate) : coordinate
+}
+
+onMounted(() => {
   // initMap()
   // console.log(OlMapObj)
 })
 
 defineExpose({
-  initMap
+  initMap,
+  addPicLabel
 })
 </script>
 
@@ -61,8 +119,9 @@ defineExpose({
 </template>
 
 <style lang="scss" scoped>
-.olmap-container{
+.olmap-container {
   width: 100%;
   height: 100%;
 }
 </style>
+.
