@@ -16,13 +16,13 @@ defineOptions({
   // 命名当前组件
   name: "OlMap"
 })
-const props = defineProps({
-  // mapType:{
-  //   type: String, // 类型
-  //   required: false, // 是否必传
-  //   default: 'tianditu' //值 ‘gaode’,'baidu','tianditu','custom'
-  // },
-})
+// const props = defineProps({
+//   mapType:{
+//     type: String, // 类型
+//     required: false, // 是否必传
+//     default: 'tianditu' //值 ‘gaode’,'baidu','tianditu','custom'
+//   },
+// })
 let OlMapObj: any = null
 let currentMapType:string = 'tianditu'
 let vectorSource:any= new Source.Vector()
