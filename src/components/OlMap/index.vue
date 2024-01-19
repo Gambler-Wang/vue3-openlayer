@@ -25,6 +25,8 @@ const props = defineProps({
 })
 let OlMapObj: any = null
 let currentMapType:string = 'tianditu'
+let vectorSource:any= new Source.Vector()
+let vectorLayer:any= null
 
 // 初始化地图
 const initMap = (mapType: string = "tianditu") => {
@@ -56,28 +58,42 @@ const initMap = (mapType: string = "tianditu") => {
   })
 }
 // 增加图片标注
-const addPicLabel = (obj: PointDataInterface) => {
-  // 增加openlayer图片标注的代码
-  const pointCoord:Array<Number> = [obj.lng, obj.lat]
-  // 矢量标注要素
-  let iconFeature = createPoint(pointCoord)
-  let labelStyle =  new OlStyle.Style({
-    image:createIcon(obj.url)
-  })
-  iconFeature.setStyle(labelStyle);
+const addPicLabel = (arr: Array<PointDataInterface>,isClean:boolean = false) => {
+  let featureArr: Feature<Geom.Point>[] = [];
+  arr.forEach(el => {
+    // 增加openlayer图片标注的代码
+    const pointCoord:Array<number> = [el.lng, el.lat]
+    // 矢量标注要素
+    let iconFeature = createPoint(pointCoord)
+    let labelStyle =  new OlStyle.Style({
+      image:createIcon(el.url)
+    })
+    iconFeature.setStyle(labelStyle);
+    featureArr.push(iconFeature);
+  });
+  if(isClean){
+    vectorSource.clear(true)
+  }
   //矢量标注的数据源
-  let vectorSource = new Source.Vector({
-    features: [iconFeature]
-  });
+  vectorSource.addFeatures(featureArr)
   //矢量标注图层
-  let vectorLayer = new Layer.Vector({
-      source: vectorSource
-  });
-  OlMapObj.addLayer(vectorLayer);
+  if(!vectorLayer){
+    vectorLayer = new Layer.Vector({
+        source: vectorSource
+    });
+    OlMapObj.addLayer(vectorLayer);
+  }else{
+    OlMapObj.updateSize()
+  }
+}
+
+// 清空标注
+const clearAll = ()=>{
+
 }
 
 // 创建点数据
-var createPoint = (arr:Array<Number>)=>{
+var createPoint = (arr:Array<number>)=>{
   return new Feature({
     geometry: new Geom.Point(trCoordSystem(arr))
   });
@@ -99,7 +115,7 @@ var createIcon = (url:any) => {
 }
 
 // 返回对应坐标系的点位
-var trCoordSystem = (coordinate: (number)[]) => {
+var trCoordSystem = (coordinate: Array<number>) => {
   return isMapEPSG3857(currentMapType) ? fromLonLat(coordinate) : coordinate
 }
 
@@ -110,7 +126,8 @@ onMounted(() => {
 
 defineExpose({
   initMap,
-  addPicLabel
+  addPicLabel,
+  clearAll
 })
 </script>
 

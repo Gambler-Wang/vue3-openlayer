@@ -71,6 +71,7 @@ export const getTileLayer = (type='tianditu',customObj=null)=>{
         })
       })
       let tileLayerCva = new TileLayer({
+        className:'underlay-map-container2',
         source: new Source.XYZ({
           crossOrigin: 'Anonymous',
           url: 'http://t0.tianditu.com/DataServer?T=cva_w&x={x}&y={y}&l={z}&tk=bc15a8dd532a9027225c6e572c73433c',

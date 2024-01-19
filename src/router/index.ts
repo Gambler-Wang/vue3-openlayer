@@ -81,13 +81,43 @@ export const constantRoutes: RouteRecordRaw[] = [
         }
       },
       {
-        path: "render-vector",
-        component: () => import("@/views/openlayer/render-vector/index.vue"),
-        name: "OpenLayerRenderVector",
+        path: "render-label",
+        redirect: "/openlayer/render-label/icon-label",
+        name: "OpenLayerRenderLabel",
         meta: {
           title: "标注渲染",
           keepAlive: true
-        }
+        },
+        children:[
+          {
+            path: "icon-label",
+            component: () => import("@/views/openlayer/render-label/icon-label/index.vue"),
+            name: "OpenLayerIconLabel",
+            meta: {
+              title: "海量图片标注",
+              keepAlive: true
+            }
+          },
+          {
+            path: "text-label",
+            component: () => import("@/views/openlayer/render-label/text-label/index.vue"),
+            name: "OpenLayerTextLabel",
+            meta: {
+              title: "文字标注",
+              keepAlive: true
+            }
+          },
+          {
+            path: "icon-text-label",
+            component: () => import("@/views/openlayer/render-label/icon-text-label/index.vue"),
+            name: "OpenLayerIconTextLabel",
+            meta: {
+              title: "文字标注",
+              keepAlive: true
+            }
+          },
+
+        ]
       },
     ]
   },
