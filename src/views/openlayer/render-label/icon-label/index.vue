@@ -7,7 +7,7 @@ defineOptions({
   name: "OpenLayerIconLabel"
 })
 /** 滚动条内容元素的引用 */
-const OlMapRef = ref<InstanceType<typeof OlMap> | null>(null)
+let OlMapRef = ref<InstanceType<typeof OlMap> | null>(null)
 const coordinateInput = ref<string>('116.3958,39.9219')
 const iconUrlInput = ref<string>('')
 
@@ -15,7 +15,7 @@ const loadMap = (type:any)=>{
   OlMapRef.value?.initMap(type)
 }
 // 添加图片标注
-const addPicLabel = (isClean) =>{
+const addPicLabel = (isClean:boolean) =>{
   const coordinate = coordinateInput.value.split(',')
   OlMapRef.value?.addPicLabel([{
     id: '1',
@@ -26,7 +26,7 @@ const addPicLabel = (isClean) =>{
 }
 
 // 添加文字标注
-const addMassivePic = (isClean)=>{
+const addMassivePic = (isClean:boolean)=>{
   const arr = getCoordinate()
   OlMapRef.value?.addPicLabel(arr,isClean)
 }
@@ -63,7 +63,6 @@ onMounted(()=>{
       <el-divider>
         标注渲染
       </el-divider>
-      <p>可以切换查看渲染</p>
       <div class="mt-3">
         <p class="mb-2">坐标：</p>
         <el-input v-model="coordinateInput"></el-input>

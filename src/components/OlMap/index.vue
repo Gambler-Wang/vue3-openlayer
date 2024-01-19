@@ -8,7 +8,7 @@ import * as OlStyle from 'ol/style'
 import * as Geom from 'ol/geom'
 import * as Layer from "ol/layer"
 import { getTileLayer, MapTypeProject, isMapEPSG3857 } from "./tileLayerConifg"
-import { PointDataInterface } from "./customInterface"
+import { PointDataInterface,LabelStyleInterface } from "./customInterface"
 import { fromLonLat, Projection, transform } from "ol/proj"
 import { reactive, ref, watch, onMounted } from "vue"
 
@@ -57,8 +57,14 @@ const initMap = (mapType: string = "tianditu") => {
     })
   })
 }
-// 增加图片标注
-const addPicLabel = (arr: Array<PointDataInterface>,isClean:boolean = false) => {
+
+/**+
+ * @description:增加图片标注
+ * @param {*} arr - 渲染的点数据
+ * @param {*} isClean - boolean 是否清除上次的
+ * @return {*}
+ */
+const addPicLabel = (arr: PointDataInterface[],isClean:boolean = false) => {
   let featureArr: Feature<Geom.Point>[] = [];
   arr.forEach(el => {
     // 增加openlayer图片标注的代码
@@ -85,11 +91,79 @@ const addPicLabel = (arr: Array<PointDataInterface>,isClean:boolean = false) => 
   }else{
     OlMapObj.updateSize()
   }
+  console.log(vectorSource.getFeatures());
+}
+/**
+ * @description:
+ * @param {*} arr 渲染的点数据
+ * @param {*} style 文字样式
+ * @param {*} isClean boolean 是否清除上次的
+ */
+const addTextLabel = (arr: PointDataInterface[],style:LabelStyleInterface,isClean:boolean = false) => {
+  let featureArr: Feature<Geom.Point>[] = [];
+  arr.forEach(el => {
+    // 增加openlayer图片标注的代码
+    const pointCoord:Array<number> = [el.lng, el.lat]
+    // 矢量标注要素
+    let iconFeature = createPoint(pointCoord)
+    let labelStyle =  new OlStyle.Style({
+      text:createText(style,el.name)
+    })
+    iconFeature.setStyle(labelStyle);
+    featureArr.push(iconFeature);
+  });
+  if(isClean){
+    vectorSource.clear(true)
+  }
+  //矢量标注的数据源
+  vectorSource.addFeatures(featureArr)
+  //矢量标注图层
+  if(!vectorLayer){
+    vectorLayer = new Layer.Vector({
+        source: vectorSource
+    });
+    OlMapObj.addLayer(vectorLayer);
+  }else{
+    OlMapObj.updateSize()
+  }
+
 }
 
+const addTextPicLabel = (arr: PointDataInterface[],style:LabelStyleInterface,isClean:boolean = false) => {
+  // 直接调用会循环两次
+  // addTextLabel(arr,style,isClean)
+  // addPicLabel(arr,false)
+  let featureArr: Feature<Geom.Point>[] = [];
+  arr.forEach(el => {
+    // 增加openlayer图片标注的代码
+    const pointCoord:Array<number> = [el.lng, el.lat]
+    // 矢量标注要素
+    let iconFeature = createPoint(pointCoord)
+    let labelStyle =  new OlStyle.Style({
+      image:createIcon(el.url),
+      text:createText(style,el.name)
+    })
+    iconFeature.setStyle(labelStyle);
+    featureArr.push(iconFeature);
+  });
+  if(isClean){
+    vectorSource.clear(true)
+  }
+  //矢量标注的数据源
+  vectorSource.addFeatures(featureArr)
+  //矢量标注图层
+  if(!vectorLayer){
+    vectorLayer = new Layer.Vector({
+        source: vectorSource
+    });
+    OlMapObj.addLayer(vectorLayer);
+  }else{
+    OlMapObj.updateSize()
+  }
+}
 // 清空标注
 const clearAll = ()=>{
-
+  OlMapObj.removeLayer(vectorLayer)
 }
 
 // 创建点数据
@@ -99,8 +173,25 @@ var createPoint = (arr:Array<number>)=>{
   });
 }
 
+// 创建文字
+function createText (style:LabelStyleInterface,text: any){
+  return new OlStyle.Text({
+    //位置
+    textAlign: style.textAlign || 'center',
+    //基准线
+    textBaseline: style.textBaseline||'middle',
+    //文字样式
+    font: style.font || 'normal 14px 微软雅黑',
+    //文本内容
+    text: text || '测试',
+    //文本填充样式（即文字颜色）
+    fill: new OlStyle.Fill({ color: style.fontColor || '#aa3300' }),
+    stroke: new OlStyle.Stroke({ color: style.strokeColor || '#ffcc33', width:style.strokeWidth || 2 })
+  })
+}
+
 // 创建图标
-var createIcon = (url:any) => {
+function createIcon(url:any) {
  return new OlStyle.Icon({
     anchor: [0.5,1],
     anchorOrigin: "top-right",
@@ -115,7 +206,7 @@ var createIcon = (url:any) => {
 }
 
 // 返回对应坐标系的点位
-var trCoordSystem = (coordinate: Array<number>) => {
+function trCoordSystem (coordinate: Array<number>) {
   return isMapEPSG3857(currentMapType) ? fromLonLat(coordinate) : coordinate
 }
 
@@ -127,6 +218,8 @@ onMounted(() => {
 defineExpose({
   initMap,
   addPicLabel,
+  addTextLabel,
+  addTextPicLabel,
   clearAll
 })
 </script>

@@ -8,26 +8,44 @@ defineOptions({
 })
 /** 滚动条内容元素的引用 */
 const OlMapRef = ref<InstanceType<typeof OlMap> | null>(null)
-const coordinateInput = ref<string>('116.3958,39.9219')
 const textInput = ref<string>('测试')
 const iconUrlInput = ref<string>('')
 const loadMap = (type:any)=>{
   OlMapRef.value?.initMap(type)
 }
-// 添加图片标注
-const addPicLabel = () =>{
-  const coordinate = coordinateInput.value.split(',')
-  OlMapRef.value?.addPicLabel({
-    id: '1',
-    name: textInput.value || '测试',
-    lng: Number(coordinate[0]),
-    lat: Number(coordinate[1]),
-    url: iconUrlInput || positionPic,
-  })
-}
-// 添加文字标注
-const addTxtLabel = ()=>{
 
+// 添加图文标注
+const addMassiveTxtPic = (isClean:boolean)=>{
+  const arr = getCoordinate()
+  const style = {
+    color:'blue'
+  }
+  // 可以这样=>会循环两次
+  OlMapRef.value?.addTextLabel(arr,style,isClean)
+  OlMapRef.value?.addPicLabel(arr,false)
+  // 也可以合着一起写
+  // OlMapRef.value?.addTextPicLabel(arr,style,isClean)
+}
+
+// 模拟经纬度点
+function getCoordinate () {
+  var minLat = -90;
+  var maxLat = 90;
+  var minLng = -180;
+  var maxLng = 180;
+
+  var latInterval = (maxLat - minLat) / 100;
+  var lngInterval = (maxLng - minLng) / 200;
+
+  var dataArray = [];
+
+  for(let i=0; i<1000; i++) {
+      var randomLat = Math.random() * (maxLat - minLat + 1) + minLat;
+      var randomLng = Math.random() * (maxLng - minLng + 1) + minLng;
+
+      dataArray.push({id:'id'+i,lng: randomLng,lat: randomLat,url: iconUrlInput.value || positionPic,name:textInput.value});
+  }
+ return dataArray
 }
 onMounted(()=>{
   loadMap('tianditu')
@@ -40,33 +58,20 @@ onMounted(()=>{
       <el-divider>
         标注渲染
       </el-divider>
-      <p>可以切换查看渲染</p>
-      <div class="line">
-        坐标：
-        <el-input v-model="coordinateInput"></el-input>
-      </div>
-      <div class="line">
-        文字：
+      <div class="mt-3">
+        <p class="mb-2">文字:</p>
         <el-input v-model="textInput"></el-input>
       </div>
-      <div class="line">
-        点链接:
+      <div class="mt-3">
+        <p class="mb-2">链接:</p>
         <el-input v-model="iconUrlInput"></el-input>
+        <p class="break-words">参考：https://bpic.51yuansu.com/pic3/cover/03/59/43/5bd10c85191e6_610.jpg</p>
       </div>
       <div class="line">
-        <el-button type="primary" @click="addPicLabel">图片标注</el-button>
+        <el-button size="large" type="primary" @click="addMassiveTxtPic(false)">图文标注</el-button>
       </div>
       <div class="line">
-        <el-button size="large" type="primary" @click="addTxtLabel">文字标注</el-button>
-      </div>
-      <div class="line">
-        <el-button size="large" type="primary" @click="loadMap('baidu')">图文标注</el-button>
-      </div>
-      <div class="line">
-        <el-button size="large" type="primary" @click="loadMap('custom')">聚合标注</el-button>
-      </div>
-      <div class="line">
-        <el-button size="large" type="primary" @click="loadMap('custom')">popup弹出窗</el-button>
+        <el-button size="large" type="primary" @click="addMassiveTxtPic(true)">图文标注,每次渲染前清空</el-button>
       </div>
     </div>
     <div class="right-box">

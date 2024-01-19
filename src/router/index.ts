@@ -112,7 +112,7 @@ export const constantRoutes: RouteRecordRaw[] = [
             component: () => import("@/views/openlayer/render-label/icon-text-label/index.vue"),
             name: "OpenLayerIconTextLabel",
             meta: {
-              title: "文字标注",
+              title: "图文标注",
               keepAlive: true
             }
           },
