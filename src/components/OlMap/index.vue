@@ -25,6 +25,7 @@ defineOptions({
 // })
 let OlMapObj: any = null
 let currentMapType:string = 'tianditu'
+// 矢量图层
 let vectorSource:any= new Source.Vector()
 let vectorLayer:any= null
 

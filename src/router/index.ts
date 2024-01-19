@@ -116,6 +116,15 @@ export const constantRoutes: RouteRecordRaw[] = [
               keepAlive: true
             }
           },
+          {
+            path: "popup-label",
+            component: () => import("@/views/openlayer/render-label/popup-label/index.vue"),
+            name: "OpenLayerPopupLabel",
+            meta: {
+              title: "弹窗标注",
+              keepAlive: true
+            }
+          },
 
         ]
       },
