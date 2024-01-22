@@ -56,7 +56,8 @@ export const constantRoutes: RouteRecordRaw[] = [
         meta: {
           title: "首页",
           svgIcon: "dashboard",
-          affix: true
+          affix: true,
+          keepAlive: true
         }
       }
     ]
@@ -128,6 +129,42 @@ export const constantRoutes: RouteRecordRaw[] = [
 
         ]
       },
+      {
+        path: "render-geometry",
+        name: "OpenLayerRenderGeometry",
+        component: () => import("@/views/openlayer/render-geometry/index.vue"),
+        meta: {
+          title: "几何渲染(点线面)",
+          keepAlive: true
+        },
+      },
+      {
+        path: "geometry-draw",
+        name: "OpenLayerGeometryDraw",
+        component: () => import("@/views/openlayer/geometry-draw/index.vue"),
+        meta: {
+          title: "几何绘制(点线面)",
+          keepAlive: true
+        },
+      },
+      {
+        path: "geometry-area",
+        name: "OpenLayerGeometryArea",
+        component: () => import("@/views/openlayer/geometry-area/index.vue"),
+        meta: {
+          title: "几何测距,侧面(线面)",
+          keepAlive: true
+        },
+      },
+      {
+        path: "map-control",
+        name: "OpenLayerMapControl",
+        component: () => import("@/views/openlayer/map-control/index.vue"),
+        meta: {
+          title: "地图控件",
+          keepAlive: true
+        },
+      },
     ]
   },
   // {
@@ -171,36 +208,36 @@ export const constantRoutes: RouteRecordRaw[] = [
   //     }
   //   ]
   // },
-  {
-    path: "/table",
-    component: Layouts,
-    redirect: "/table/element-plus",
-    name: "Table",
-    meta: {
-      title: "表格",
-      elIcon: "Grid"
-    },
-    children: [
-      {
-        path: "element-plus",
-        component: () => import("@/views/table/element-plus/index.vue"),
-        name: "ElementPlus",
-        meta: {
-          title: "Element Plus",
-          keepAlive: true
-        }
-      },
-      {
-        path: "vxe-table",
-        component: () => import("@/views/table/vxe-table/index.vue"),
-        name: "VxeTable",
-        meta: {
-          title: "Vxe Table",
-          keepAlive: true
-        }
-      }
-    ]
-  },
+  // {
+  //   path: "/table",
+  //   component: Layouts,
+  //   redirect: "/table/element-plus",
+  //   name: "Table",
+  //   meta: {
+  //     title: "表格",
+  //     elIcon: "Grid"
+  //   },
+  //   children: [
+  //     {
+  //       path: "element-plus",
+  //       component: () => import("@/views/table/element-plus/index.vue"),
+  //       name: "ElementPlus",
+  //       meta: {
+  //         title: "Element Plus",
+  //         keepAlive: true
+  //       }
+  //     },
+  //     {
+  //       path: "vxe-table",
+  //       component: () => import("@/views/table/vxe-table/index.vue"),
+  //       name: "VxeTable",
+  //       meta: {
+  //         title: "Vxe Table",
+  //         keepAlive: true
+  //       }
+  //     }
+  //   ]
+  // },
   // {
   //   path: "/menu",
   //   component: Layouts,

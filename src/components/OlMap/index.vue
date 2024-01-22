@@ -17,13 +17,13 @@ defineOptions({
   // 命名当前组件
   name: "OlMap"
 })
-// const props = defineProps({
-//   mapType:{
-//     type: String, // 类型
-//     required: false, // 是否必传
-//     default: 'tianditu' //值 ‘gaode’,'baidu','tianditu','custom'
-//   },
-// })
+const props = defineProps({
+  mapId:{
+    type: String, // 类型
+    required: false, // 是否必传
+    default: 'map' //值 ‘gaode’,'baidu','tianditu','custom'
+  },
+})
 let OlMapObj: any = ref(null)
 let currentMapType:string = 'tianditu'
 // 矢量图层
@@ -48,12 +48,12 @@ const initMap = (mapType: string = "tianditu") => {
     return OlMapObj.value
   }
   OlMapObj.value = new Map({
-    target: "map",
+    target: props.mapId,
     layers: getTileLayer(currentMapType),
     view: new View({
       center: trCoordSystem([116.411794, 39.9068]),
       projection: MapTypeProject[currentMapType],
-      zoom: 5,
+      zoom: 6,
       maxZoom: 19,
       minZoom: 1
     })
@@ -262,7 +262,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="olmap-container" id="map"></div>
+  <div class="olmap-container" :id="mapId"></div>
 </template>
 
 <style lang="scss" scoped>

@@ -4,27 +4,31 @@ import positionPic from "@/assets/map/position.png?url"
 import OlMap from "@/components/OlMap/index.vue"
 defineOptions({
   // 命名当前组件
-  name: "OpenLayerIconTextLabel"
+  name: "OpenLayerIconLabel"
 })
 /** 滚动条内容元素的引用 */
-const OlMapRef = ref<InstanceType<typeof OlMap> | null>(null)
-const textInput = ref<string>('测试')
+let OlMapRef = ref<InstanceType<typeof OlMap> | null>(null)
+const coordinateInput = ref<string>('116.3958,39.9219')
 const iconUrlInput = ref<string>('')
+
 const loadMap = (type:any)=>{
   OlMapRef.value?.initMap(type)
 }
+// 添加图片标注
+const addPicLabel = (isClean:boolean) =>{
+  const coordinate = coordinateInput.value.split(',')
+  OlMapRef.value?.addPicLabel([{
+    id: '1',
+    lng: Number(coordinate[0]),
+    lat: Number(coordinate[1]),
+    url: iconUrlInput.value || positionPic,
+  }],isClean)
+}
 
-// 添加图文标注
-const addMassiveTxtPic = (isClean:boolean)=>{
+// 添加文字标注
+const addMassivePic = (isClean:boolean)=>{
   const arr = getCoordinate()
-  const style = {
-    color:'blue'
-  }
-  // 可以这样=>会循环两次
-  // OlMapRef.value?.addTextLabel(arr,style,isClean)
-  // OlMapRef.value?.addPicLabel(arr,false)
-  // 也可以合着一起写
-  OlMapRef.value?.addTextPicLabel(arr,style,isClean)
+  OlMapRef.value?.addPicLabel(arr,isClean)
 }
 
 // 模拟经纬度点
@@ -43,12 +47,12 @@ function getCoordinate () {
       var randomLat = Math.random() * (maxLat - minLat + 1) + minLat;
       var randomLng = Math.random() * (maxLng - minLng + 1) + minLng;
 
-      dataArray.push({id:'id'+i,lng: randomLng,lat: randomLat,url: iconUrlInput.value || positionPic,name:textInput.value});
+      dataArray.push({id:'id'+i,lng: randomLng,lat: randomLat,url: iconUrlInput.value || positionPic,});
   }
  return dataArray
 }
+
 onMounted(()=>{
-  debugger
   loadMap('tianditu')
 })
 </script>
@@ -60,8 +64,8 @@ onMounted(()=>{
         标注渲染
       </el-divider>
       <div class="mt-3">
-        <p class="mb-2">文字:</p>
-        <el-input v-model="textInput"></el-input>
+        <p class="mb-2">坐标：</p>
+        <el-input v-model="coordinateInput"></el-input>
       </div>
       <div class="mt-3">
         <p class="mb-2">链接:</p>
@@ -69,10 +73,17 @@ onMounted(()=>{
         <p class="break-words">参考：https://bpic.51yuansu.com/pic3/cover/03/59/43/5bd10c85191e6_610.jpg</p>
       </div>
       <div class="line">
-        <el-button size="large" type="primary" @click="addMassiveTxtPic(false)">图文标注</el-button>
+        <el-button type="primary" @click="addPicLabel(false)">图片标注</el-button>
       </div>
       <div class="line">
-        <el-button size="large" type="primary" @click="addMassiveTxtPic(true)">图文标注,每次渲染前清空</el-button>
+        <el-button type="primary" @click="addPicLabel(true)">图片标注,每次渲染前清空</el-button>
+      </div>
+      <el-divider></el-divider>
+      <div class="line">
+        <el-button type="primary" @click="addMassivePic(false)">海量图片标注</el-button>
+      </div>
+      <div class="line">
+        <el-button type="primary" @click="addMassivePic(true)">海量图片标注,每次渲染前清空</el-button>
       </div>
     </div>
     <div class="right-box">
