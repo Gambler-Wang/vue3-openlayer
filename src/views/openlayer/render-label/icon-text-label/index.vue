@@ -21,10 +21,10 @@ const addMassiveTxtPic = (isClean:boolean)=>{
     color:'blue'
   }
   // 可以这样=>会循环两次
-  OlMapRef.value?.addTextLabel(arr,style,isClean)
-  OlMapRef.value?.addPicLabel(arr,false)
+  // OlMapRef.value?.addTextLabel(arr,style,isClean)
+  // OlMapRef.value?.addPicLabel(arr,false)
   // 也可以合着一起写
-  // OlMapRef.value?.addTextPicLabel(arr,style,isClean)
+  OlMapRef.value?.addTextPicLabel(arr,style,isClean)
 }
 
 // 模拟经纬度点

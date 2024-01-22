@@ -1,5 +1,5 @@
 export interface PointDataInterface {
-  id: string;
+  id?: string;
   lng: number;
   lat: number;
   [key: string]: any;

@@ -7,6 +7,7 @@ import * as Source from 'ol/source'
 import * as OlStyle from 'ol/style'
 import * as Geom from 'ol/geom'
 import * as Layer from "ol/layer"
+import Overlay from 'ol/overlay'
 import { getTileLayer, MapTypeProject, isMapEPSG3857 } from "./tileLayerConifg"
 import { PointDataInterface,LabelStyleInterface } from "./customInterface"
 import { fromLonLat, Projection, transform } from "ol/proj"
@@ -23,7 +24,7 @@ defineOptions({
 //     default: 'tianditu' //值 ‘gaode’,'baidu','tianditu','custom'
 //   },
 // })
-let OlMapObj: any = null
+let OlMapObj: any = ref(null)
 let currentMapType:string = 'tianditu'
 // 矢量图层
 let vectorSource:any= new Source.Vector()
@@ -32,10 +33,10 @@ let vectorLayer:any= null
 // 初始化地图
 const initMap = (mapType: string = "tianditu") => {
   currentMapType = mapType
-  if (OlMapObj) {
+  if (OlMapObj.value) {
     // 如果存在地图，把前面的图层替换掉，无需重新加载
-    OlMapObj.setLayers(getTileLayer(currentMapType))
-    OlMapObj.setView(
+    OlMapObj.value.setLayers(getTileLayer(currentMapType))
+    OlMapObj.value.setView(
       new View({
         center: trCoordSystem([116.411794, 39.9068]),
         projection: MapTypeProject[currentMapType],
@@ -44,9 +45,9 @@ const initMap = (mapType: string = "tianditu") => {
         minZoom: 1
       })
     )
-    return
+    return OlMapObj.value
   }
-  OlMapObj = new Map({
+  OlMapObj.value = new Map({
     target: "map",
     layers: getTileLayer(currentMapType),
     view: new View({
@@ -57,6 +58,7 @@ const initMap = (mapType: string = "tianditu") => {
       minZoom: 1
     })
   })
+  return OlMapObj.value
 }
 
 /**+
@@ -71,7 +73,7 @@ const addPicLabel = (arr: PointDataInterface[],isClean:boolean = false) => {
     // 增加openlayer图片标注的代码
     const pointCoord:Array<number> = [el.lng, el.lat]
     // 矢量标注要素
-    let iconFeature = createPoint(pointCoord)
+    let iconFeature = createPoint(pointCoord,el)
     let labelStyle =  new OlStyle.Style({
       image:createIcon(el.url)
     })
@@ -88,9 +90,9 @@ const addPicLabel = (arr: PointDataInterface[],isClean:boolean = false) => {
     vectorLayer = new Layer.Vector({
         source: vectorSource
     });
-    OlMapObj.addLayer(vectorLayer);
+    OlMapObj.value.addLayer(vectorLayer);
   }else{
-    OlMapObj.updateSize()
+    OlMapObj.value.updateSize()
   }
   console.log(vectorSource.getFeatures());
 }
@@ -106,7 +108,7 @@ const addTextLabel = (arr: PointDataInterface[],style:LabelStyleInterface,isClea
     // 增加openlayer图片标注的代码
     const pointCoord:Array<number> = [el.lng, el.lat]
     // 矢量标注要素
-    let iconFeature = createPoint(pointCoord)
+    let iconFeature = createPoint(pointCoord,el)
     let labelStyle =  new OlStyle.Style({
       text:createText(style,el.name)
     })
@@ -123,13 +125,18 @@ const addTextLabel = (arr: PointDataInterface[],style:LabelStyleInterface,isClea
     vectorLayer = new Layer.Vector({
         source: vectorSource
     });
-    OlMapObj.addLayer(vectorLayer);
+    OlMapObj.value.addLayer(vectorLayer);
   }else{
-    OlMapObj.updateSize()
+    OlMapObj.value.updateSize()
   }
 
 }
-
+/**
+ * @description:增加点icon和点text
+ * @param {*} arr 渲染的点数据
+ * @param {*} style 文字样式
+ * @param {*} isClean boolean 是否清除上次的
+ */
 const addTextPicLabel = (arr: PointDataInterface[],style:LabelStyleInterface,isClean:boolean = false) => {
   // 直接调用会循环两次
   // addTextLabel(arr,style,isClean)
@@ -139,7 +146,7 @@ const addTextPicLabel = (arr: PointDataInterface[],style:LabelStyleInterface,isC
     // 增加openlayer图片标注的代码
     const pointCoord:Array<number> = [el.lng, el.lat]
     // 矢量标注要素
-    let iconFeature = createPoint(pointCoord)
+    let iconFeature = createPoint(pointCoord,el)
     let labelStyle =  new OlStyle.Style({
       image:createIcon(el.url),
       text:createText(style,el.name)
@@ -157,24 +164,32 @@ const addTextPicLabel = (arr: PointDataInterface[],style:LabelStyleInterface,isC
     vectorLayer = new Layer.Vector({
         source: vectorSource
     });
-    OlMapObj.addLayer(vectorLayer);
+    OlMapObj.value.addLayer(vectorLayer);
   }else{
-    OlMapObj.updateSize()
+    OlMapObj.value.updateSize()
   }
 }
+// 增加弹窗
+const addPopupOverlay = (dom: any) =>{
+  const popup = createPopup(dom)
+  OlMapObj.value.addOverlay(popup)
+  return popup
+}
+
 // 清空标注
 const clearAll = ()=>{
-  OlMapObj.removeLayer(vectorLayer)
+  OlMapObj.value.removeLayer(vectorLayer)
 }
 
 // 创建点数据
-var createPoint = (arr:Array<number>)=>{
+var createPoint = (arr:Array<number>,obj:any={})=>{
   return new Feature({
-    geometry: new Geom.Point(trCoordSystem(arr))
+    geometry: new Geom.Point(trCoordSystem(arr)),
+    attribute:obj
   });
 }
 
-// 创建文字
+// 创建文字标注
 function createText (style:LabelStyleInterface,text: any){
   return new OlStyle.Text({
     //位置
@@ -191,7 +206,7 @@ function createText (style:LabelStyleInterface,text: any){
   })
 }
 
-// 创建图标
+// 创建图标标注
 function createIcon(url:any) {
  return new OlStyle.Icon({
     anchor: [0.5,1],
@@ -206,6 +221,24 @@ function createIcon(url:any) {
   })
 }
 
+// 创建弹窗
+function createPopup(dom: any){
+  return new Overlay({
+      //要转换成overlay的HTML元素
+      element: dom,
+      //Popup放置的位置
+      positioning: 'bottom-center',
+      //是否应该停止事件传播到地图窗口
+      stopEvent: false,
+      //当前窗口可见
+      autoPan: {
+        animation:{
+          duration: 250
+        }
+      },
+  });
+}
+
 // 返回对应坐标系的点位
 function trCoordSystem (coordinate: Array<number>) {
   return isMapEPSG3857(currentMapType) ? fromLonLat(coordinate) : coordinate
@@ -218,10 +251,13 @@ onMounted(() => {
 
 defineExpose({
   initMap,
+  OlMapObj,
   addPicLabel,
   addTextLabel,
   addTextPicLabel,
-  clearAll
+  addPopupOverlay,
+  trCoordSystem,
+  clearAll,
 })
 </script>
 
