@@ -118,7 +118,7 @@ onMounted(()=>{
   <div class="render-vector-container">
     <div class="left-box">
       <el-divider>
-        标注渲染
+        弹窗标注
       </el-divider>
       <div class="line">
         <el-button size="large" type="primary" @click="openPopup">非要素弹窗标注</el-button>
@@ -129,6 +129,9 @@ onMounted(()=>{
       <div class="line">
         <el-button size="large" type="primary" @click="showPointPopup">要素内容展示弹窗</el-button>
       </div>
+      <el-divider>
+        图标可点击
+      </el-divider>
     </div>
     <div class="right-box">
       <OlMap ref="OlMapRef" ></OlMap>

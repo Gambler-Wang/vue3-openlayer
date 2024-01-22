@@ -1,7 +1,7 @@
 export interface PointDataInterface {
-  id?: string;
-  lng: number;
-  lat: number;
+  id?: string,
+  lng: number,
+  lat: number,
   [key: string]: any;
 }
 export  interface LabelStyleInterface {
@@ -11,5 +11,12 @@ export  interface LabelStyleInterface {
   fontColor?:any,
   strokeColor?:any,
   strokeWidth?:any,
+  [key: string]: any;
+}
+
+export  interface BaseStyleInterface {
+  fillColor?:string,
+  strokeColor?:string,
+  strokeWidth?:number,
   [key: string]: any;
 }

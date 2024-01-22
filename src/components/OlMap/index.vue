@@ -9,7 +9,8 @@ import * as Geom from 'ol/geom'
 import * as Layer from "ol/layer"
 import Overlay from 'ol/overlay'
 import { getTileLayer, MapTypeProject, isMapEPSG3857 } from "./tileLayerConifg"
-import { PointDataInterface,LabelStyleInterface } from "./customInterface"
+import { PointDataInterface,LabelStyleInterface,BaseStyleInterface } from "./customInterface"
+import { ElMessage } from "element-plus"
 import { fromLonLat, Projection, transform } from "ol/proj"
 import { reactive, ref, watch, onMounted } from "vue"
 
@@ -169,6 +170,41 @@ const addTextPicLabel = (arr: PointDataInterface[],style:LabelStyleInterface,isC
     OlMapObj.value.updateSize()
   }
 }
+// 绘制图形
+const renderGeometry = (type: string,data:any[],style:BaseStyleInterface)=>{
+  let sourceFeatureArr = []
+  if(type === 'point'){
+    data.forEach(el=>{
+      const pointCoord:Array<number> = [el.lng, el.lat]
+      let sourceFeature = createPoint(pointCoord)
+      const styleObj = createPointStyle(style)
+      sourceFeature.setStyle(styleObj)
+      sourceFeatureArr.push(sourceFeature)
+    })
+  }else if(type === 'line'){
+    if(data.length<2){
+      ElMessage.warning('设置点位小于2个，无法连线')
+      return
+    }
+    const lastIndex = data.length - 1
+    const handleArr = [[data[0].lng,data[1].lat],[data[lastIndex].lng,data[lastIndex].lat]]
+    let sourceFeature = createLine(handleArr)
+    const styleObj = createPointStyle(style)
+    sourceFeature.setStyle(styleObj)
+    sourceFeatureArr.push(sourceFeature)
+  }
+  //矢量标注的数据源
+  vectorSource.addFeatures(sourceFeatureArr)
+  //矢量标注图层
+  if(!vectorLayer){
+    vectorLayer = new Layer.Vector({
+        source: vectorSource
+    });
+    OlMapObj.value.addLayer(vectorLayer);
+  }else{
+    OlMapObj.value.updateSize()
+  }
+}
 // 增加弹窗
 const addPopupOverlay = (dom: any) =>{
   const popup = createPopup(dom)
@@ -178,18 +214,30 @@ const addPopupOverlay = (dom: any) =>{
 
 // 清空标注
 const clearAll = ()=>{
+  vectorSource.clear(true)
   OlMapObj.value.removeLayer(vectorLayer)
 }
 
-// 创建点数据
-var createPoint = (arr:Array<number>,obj:any={})=>{
+// 创建点要素
+function createPoint (arr:Array<number>,obj:any={}){
   return new Feature({
     geometry: new Geom.Point(trCoordSystem(arr)),
     attribute:obj
   });
 }
 
-// 创建文字标注
+// 创建线要素
+function createLine (arr: any[],obj:any={}){
+  const handleArr = arr.map((el: number[])=>{
+    return trCoordSystem(el)
+  })
+  return new Feature({
+    geometry: new Geom.LineString(handleArr),
+    attribute:obj
+  });
+}
+
+// 创建文字标注以及文字样式
 function createText (style:LabelStyleInterface,text: any){
   return new OlStyle.Text({
     //位置
@@ -203,6 +251,28 @@ function createText (style:LabelStyleInterface,text: any){
     //文本填充样式（即文字颜色）
     fill: new OlStyle.Fill({ color: style.fontColor || '#aa3300' }),
     stroke: new OlStyle.Stroke({ color: style.strokeColor || '#ffcc33', width:style.strokeWidth || 2 })
+  })
+}
+
+// 创建点的样式
+function createPointStyle(style:BaseStyleInterface){
+  return new OlStyle.Style({
+    //填充色
+    fill: new OlStyle.Fill({
+      color: style.fillColor
+    }),
+    //边线颜色
+    stroke: new OlStyle.Stroke({
+      color: style.strokeColor,
+      width: style.strokeWidth
+    }),
+    //形状
+    image: new OlStyle.Circle({
+      radius: style.imageCircleRadius || 1,
+      fill: new OlStyle.Fill({
+          color: style.imageCircleFileColor || '#000'
+      })
+    })
   })
 }
 
@@ -256,6 +326,7 @@ defineExpose({
   addTextLabel,
   addTextPicLabel,
   addPopupOverlay,
+  renderGeometry,
   trCoordSystem,
   clearAll,
 })
