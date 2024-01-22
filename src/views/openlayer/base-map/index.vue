@@ -2,7 +2,6 @@
 import { reactive, ref, watch,onMounted } from "vue"
 import OlMap from "@/components/OlMap/index.vue"
 
-debugger
 defineOptions({
   // 命名当前组件
   name: "OpenLayerBaseMap"

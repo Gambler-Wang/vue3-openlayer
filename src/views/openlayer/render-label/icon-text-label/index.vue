@@ -48,7 +48,6 @@ function getCoordinate () {
  return dataArray
 }
 onMounted(()=>{
-  debugger
   loadMap('tianditu')
 })
 </script>
