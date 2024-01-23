@@ -7,6 +7,8 @@ import * as Source from 'ol/source'
 import * as OlStyle from 'ol/style'
 import * as Geom from 'ol/geom'
 import * as Layer from "ol/layer"
+import * as Interaction from "ol/interaction"
+import {createRegularPolygon,createBox} from "ol/interaction/draw"
 import Overlay from 'ol/overlay'
 import { getTileLayer, MapTypeProject, isMapEPSG3857 } from "./tileLayerConifg"
 import { PointDataInterface,LabelStyleInterface,BaseStyleInterface } from "./customInterface"
@@ -30,6 +32,11 @@ let currentMapType:string = 'tianditu'
 // 矢量图层
 let vectorSource:any= new Source.Vector()
 let vectorLayer:any= null
+// 绘制对象
+let drawObj:any = ref(null)
+// 绘制矢量图层
+let drawVectorSource:any= new Source.Vector()
+let drawVectorLayer:any= null
 
 // 初始化地图
 const initMap = (mapType: string = "tianditu") => {
@@ -170,10 +177,16 @@ const addTextPicLabel = (arr: PointDataInterface[],style:LabelStyleInterface,isC
     OlMapObj.value.updateSize()
   }
 }
-// 绘制图形
+/**
+ * @description: 绘制图形
+ * @param {*} type <string> Point,LineString,Polygon,Circle,Rectangle,Square
+ * @param {*} data <array> 渲染数据
+ * @param {*} style 样式对象
+ * @return {*}
+ */
 const renderGeometry = (type: string,data:any[],style:BaseStyleInterface)=>{
   let sourceFeatureArr = []
-  if(type === 'point'){
+  if(type === 'Point'){
     data.forEach(el=>{
       const pointCoord:Array<number> = [el.lng, el.lat]
       let sourceFeature = createPoint(pointCoord)
@@ -182,7 +195,7 @@ const renderGeometry = (type: string,data:any[],style:BaseStyleInterface)=>{
       sourceFeatureArr.push(sourceFeature)
     })
   }
-  else if(type === 'line'){
+  else if(type === 'LineString' ){
     if(data.length<2){
       ElMessage.warning('设置点位小于2个，无法连线')
       return
@@ -194,7 +207,7 @@ const renderGeometry = (type: string,data:any[],style:BaseStyleInterface)=>{
     sourceFeature.setStyle(styleObj)
     sourceFeatureArr.push(sourceFeature)
   }
-  else if(type === 'polygon'){
+  else if(type === 'Polygon'){
     // 多边形
     if(data.length<3){
       ElMessage.warning('设置点位小于3个，无法绘制多边形')
@@ -210,13 +223,15 @@ const renderGeometry = (type: string,data:any[],style:BaseStyleInterface)=>{
     sourceFeature.setStyle(styleObj)
     sourceFeatureArr.push(sourceFeature)
   }
-  else if(type === 'circle'){
+  else if(type === 'Circle'){
     data.forEach(el=>{
       let sourceFeature = createCircle([el.lng,el.lat],el)
       const styleObj = createVectorStyle(style)
       sourceFeature.setStyle(styleObj)
       sourceFeatureArr.push(sourceFeature)
     })
+  }else{
+    return
   }
   //矢量标注的数据源
   vectorSource.addFeatures(sourceFeatureArr)
@@ -230,6 +245,40 @@ const renderGeometry = (type: string,data:any[],style:BaseStyleInterface)=>{
     OlMapObj.value.updateSize()
   }
 }
+
+/**
+ * @description: 绘制自由点线面圆
+ * @param {*} type 绘制类型
+ * @return {*}
+ */
+const drawGeometry=(obj:any)=>{
+  let {type,freehand}=obj
+  let geometryFunction,maxPoints;
+  closeDrawFn();
+  if(type === '_LineString'){
+    type = 'LineString'
+  }else if(type === '_Polygon'){
+    type = 'Polygon'
+  }else if(type === 'Rectangle'){
+    type = 'LineString';
+    maxPoints = 2;
+    geometryFunction = createBox()
+  }else if(type === 'Square'){
+    type = 'Circle';
+    geometryFunction = createRegularPolygon(4)
+  }
+  drawObj.value = createInteraction({ type, freehand, geometryFunction, maxPoints })
+  OlMapObj.value.addInteraction(drawObj.value)
+  if(!drawVectorLayer){
+    drawVectorLayer = new Layer.Vector({
+        source: drawVectorSource
+    });
+    OlMapObj.value.addLayer(drawVectorLayer);
+  }else{
+    OlMapObj.value.updateSize()
+  }
+}
+
 // 增加弹窗
 const addPopupOverlay = (dom: any) =>{
   const popup = createPopup(dom)
@@ -241,6 +290,26 @@ const addPopupOverlay = (dom: any) =>{
 const clearAll = ()=>{
   vectorSource.clear(true)
   OlMapObj.value.removeLayer(vectorLayer)
+  drawVectorSource.clear(true)
+  OlMapObj.value.removeLayer(drawVectorLayer)
+}
+
+// 关闭绘制功能
+function closeDrawFn(){
+  if(drawObj.value){
+    OlMapObj.value.removeInteraction(drawObj.value);
+  }
+}
+
+// 创建自由绘制类对象
+function createInteraction(obj:any){
+  return new Interaction.Draw({
+      source: drawVectorSource,
+      type: obj.type,
+      freehand: obj.freehand,
+      geometryFunction:obj.geometryFunction,
+      maxPoints:obj.maxPoints
+  });
 }
 
 // 创建点要素
@@ -370,6 +439,8 @@ defineExpose({
   addTextPicLabel,
   addPopupOverlay,
   renderGeometry,
+  drawGeometry,
+  closeDrawFn,
   trCoordSystem,
   clearAll,
 })
