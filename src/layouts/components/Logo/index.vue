@@ -24,7 +24,8 @@ const { layoutMode } = storeToRefs(settingsStore)
         <img :src="logo" class="layout-logo" />
       </router-link>
       <router-link v-else key="expand" to="/">
-        <img :src="layoutMode !== 'left' ? logoText2 : logoText1" class="layout-logo-text" />
+        <div class="c-white">Map</div>
+        <!-- <img :src="layoutMode !== 'left' ? logoText2 : logoText1" class="layout-logo-text" /> -->
       </router-link>
     </transition>
   </div>
