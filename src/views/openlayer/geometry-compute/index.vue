@@ -4,7 +4,7 @@ import positionPic from "@/assets/map/position.png?url"
 import OlMap from "@/components/OlMap/index.vue"
 defineOptions({
   // 命名当前组件
-  name: "OpenLayerMapControl"
+  name: "OpenLayerGeometryCompute"
 })
 /** 滚动条内容元素的引用 */
 let OlMapRef = ref<InstanceType<typeof OlMap> | null>(null)
@@ -103,7 +103,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="map-control-container">
+  <div class="geometry-compute-container">
     <div class="left-box">
       <el-divider> 几何绘制 </el-divider>
       <div class="line">
@@ -136,7 +136,7 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.map-control-container {
+.geometry-compute-container {
   padding: 10px;
   padding-bottom: 0;
   box-sizing: border-box;

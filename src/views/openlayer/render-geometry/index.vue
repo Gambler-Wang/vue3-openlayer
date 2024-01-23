@@ -4,7 +4,7 @@ import positionPic from "@/assets/map/position.png?url"
 import OlMap from "@/components/OlMap/index.vue"
 defineOptions({
   // 命名当前组件
-  name: "OpenLayerIconLabel"
+  name: "OpenLayerRenderGeometry"
 })
 /** 滚动条内容元素的引用 */
 let OlMapRef = ref<InstanceType<typeof OlMap> | null>(null)
@@ -23,7 +23,7 @@ const renderPoint = () => {
     imageCircleRadius: 8,
     imageCircleFillColor: "#409eff"
   }
-  OlMapRef.value?.renderGeometry("point", pointData, style)
+  OlMapRef.value?.renderGeometry("Point", pointData, style)
 }
 const renderLine = () => {
   const pointData = getCoordinate()
@@ -39,7 +39,7 @@ const renderLine = () => {
     strokeColor: "#409eff",
     strokeWidth: 2
   }
-  OlMapRef.value?.renderGeometry("line", pointData, style)
+  OlMapRef.value?.renderGeometry("LineString", pointData, style)
 }
 const renderPolygon = () => {
   const pointData = getCoordinate(3)
@@ -55,7 +55,7 @@ const renderPolygon = () => {
     strokeColor: "#409eff",
     strokeWidth: 2
   }
-  OlMapRef.value?.renderGeometry("polygon", pointData, style)
+  OlMapRef.value?.renderGeometry("Polygon", pointData, style)
 }
 const renderCircle = () => {
   const pointData = getCoordinate(500)
@@ -71,7 +71,7 @@ const renderCircle = () => {
     strokeColor: "#409eff",
     strokeWidth: 2
   }
-  OlMapRef.value?.renderGeometry("circle", pointData, style)
+  OlMapRef.value?.renderGeometry("Circle", pointData, style)
 }
 const clear = () => {
   OlMapRef.value?.clearAll()
@@ -103,7 +103,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="render-vector-container">
+  <div class="render-geometry-container">
     <div class="left-box">
       <el-divider> 几何渲染 </el-divider>
       <div class="line">
@@ -119,7 +119,7 @@ onMounted(() => {
         <el-button type="primary" @click="renderCircle">渲染圆</el-button>
       </div>
       <div class="line">
-        <el-button type="primary" @click="clear">清空</el-button>
+        <el-button type="primary" @click="clear">清空图层</el-button>
       </div>
     </div>
     <div class="right-box">
@@ -129,7 +129,7 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-.render-vector-container {
+.render-geometry-container {
   padding: 10px;
   padding-bottom: 0;
   box-sizing: border-box;

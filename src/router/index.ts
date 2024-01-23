@@ -147,11 +147,11 @@ export const constantRoutes: RouteRecordRaw[] = [
         },
       },
       {
-        path: "geometry-area",
-        name: "OpenLayerGeometryArea",
-        component: () => import("@/views/openlayer/geometry-area/index.vue"),
+        path: "geometry-compute",
+        name: "OpenLayerGeometryCompute",
+        component: () => import("@/views/openlayer/geometry-compute/index.vue"),
         meta: {
-          title: "几何测距,侧面(线面)",
+          title: "测距,侧面",
           keepAlive: true
         },
       },
