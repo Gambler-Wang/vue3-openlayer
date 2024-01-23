@@ -15,8 +15,16 @@ export  interface LabelStyleInterface {
 }
 
 export  interface BaseStyleInterface {
+  // 填充色
   fillColor?:string,
+  // 边线颜色
   strokeColor?:string,
+  // 边线宽度
   strokeWidth?:number,
+  // 圆样式半径
+  imageCircleRadius?:number
+  // 圆样式填充样式
+  imageCircleFillColor?:string
+  // 其他
   [key: string]: any;
 }

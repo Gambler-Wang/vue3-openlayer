@@ -177,11 +177,12 @@ const renderGeometry = (type: string,data:any[],style:BaseStyleInterface)=>{
     data.forEach(el=>{
       const pointCoord:Array<number> = [el.lng, el.lat]
       let sourceFeature = createPoint(pointCoord)
-      const styleObj = createPointStyle(style)
+      const styleObj = createVectorStyle(style)
       sourceFeature.setStyle(styleObj)
       sourceFeatureArr.push(sourceFeature)
     })
-  }else if(type === 'line'){
+  }
+  else if(type === 'line'){
     if(data.length<2){
       ElMessage.warning('设置点位小于2个，无法连线')
       return
@@ -189,9 +190,33 @@ const renderGeometry = (type: string,data:any[],style:BaseStyleInterface)=>{
     const lastIndex = data.length - 1
     const handleArr = [[data[0].lng,data[1].lat],[data[lastIndex].lng,data[lastIndex].lat]]
     let sourceFeature = createLine(handleArr)
-    const styleObj = createPointStyle(style)
+    const styleObj = createVectorStyle(style)
     sourceFeature.setStyle(styleObj)
     sourceFeatureArr.push(sourceFeature)
+  }
+  else if(type === 'polygon'){
+    // 多边形
+    if(data.length<3){
+      ElMessage.warning('设置点位小于3个，无法绘制多边形')
+      return
+    }
+    let handleArr: any[] = [];
+    data.forEach(el=>{
+      let arr = [el.lng,el.lat]
+      handleArr.push(arr)
+    })
+    let sourceFeature = createPolygon(handleArr)
+    const styleObj = createVectorStyle(style)
+    sourceFeature.setStyle(styleObj)
+    sourceFeatureArr.push(sourceFeature)
+  }
+  else if(type === 'circle'){
+    data.forEach(el=>{
+      let sourceFeature = createCircle([el.lng,el.lat],el)
+      const styleObj = createVectorStyle(style)
+      sourceFeature.setStyle(styleObj)
+      sourceFeatureArr.push(sourceFeature)
+    })
   }
   //矢量标注的数据源
   vectorSource.addFeatures(sourceFeatureArr)
@@ -237,6 +262,24 @@ function createLine (arr: any[],obj:any={}){
   });
 }
 
+// 创建多边形要素
+function createPolygon(arr: any[],obj:any={}){
+  const handleArr = arr.map((el: number[])=>{
+    return trCoordSystem(el)
+  })
+  return new Feature({
+    geometry: new Geom.Polygon([handleArr]),
+    attribute:obj
+  });
+}
+
+// 创建圆要素
+function createCircle(arr:Array<number>,obj:any={}){
+  return new Feature({
+    geometry: new Geom.Circle(trCoordSystem(arr), obj.radius)
+  });
+}
+
 // 创建文字标注以及文字样式
 function createText (style:LabelStyleInterface,text: any){
   return new OlStyle.Text({
@@ -254,8 +297,8 @@ function createText (style:LabelStyleInterface,text: any){
   })
 }
 
-// 创建点的样式
-function createPointStyle(style:BaseStyleInterface){
+// 创建样式
+function createVectorStyle(style:BaseStyleInterface){
   return new OlStyle.Style({
     //填充色
     fill: new OlStyle.Fill({
@@ -270,7 +313,7 @@ function createPointStyle(style:BaseStyleInterface){
     image: new OlStyle.Circle({
       radius: style.imageCircleRadius || 1,
       fill: new OlStyle.Fill({
-          color: style.imageCircleFileColor || '#000'
+          color: style.imageCircleFillColor || '#000'
       })
     })
   })

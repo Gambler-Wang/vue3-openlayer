@@ -21,7 +21,7 @@ const renderPoint = () => {
     strokeColor: "#fff",
     strokeWidth: 2,
     imageCircleRadius: 8,
-    imageCircleFileColor: "#409eff"
+    imageCircleFillColor: "#409eff"
   }
   OlMapRef.value?.renderGeometry("point", pointData, style)
 }
@@ -31,7 +31,8 @@ const renderLine = () => {
     lng: 116.3958,
     lat: 39.9219,
     id: "---",
-    url: "----"
+    url: "----",
+    radius: 0
   })
   const style = {
     fillColor: "#409eff",
@@ -40,14 +41,44 @@ const renderLine = () => {
   }
   OlMapRef.value?.renderGeometry("line", pointData, style)
 }
-const renderArea = () => {}
-const renderCircle = () => {}
+const renderPolygon = () => {
+  const pointData = getCoordinate(3)
+  pointData.push({
+    lng: 116.3958,
+    lat: 39.9219,
+    id: "---",
+    url: "----",
+    radius: 0
+  })
+  const style = {
+    fillColor: "rgba(0,0,0,0.2)",
+    strokeColor: "#409eff",
+    strokeWidth: 2
+  }
+  OlMapRef.value?.renderGeometry("polygon", pointData, style)
+}
+const renderCircle = () => {
+  const pointData = getCoordinate(500)
+  pointData.push({
+    lng: 116.3958,
+    lat: 39.9219,
+    id: "---",
+    url: "----",
+    radius: 500000
+  })
+  const style = {
+    fillColor: "rgba(0,0,0,0.2)",
+    strokeColor: "#409eff",
+    strokeWidth: 2
+  }
+  OlMapRef.value?.renderGeometry("circle", pointData, style)
+}
 const clear = () => {
   OlMapRef.value?.clearAll()
 }
 
 // 模拟经纬度点
-function getCoordinate() {
+function getCoordinate(num:number = 1000) {
   var minLat = -90
   var maxLat = 90
   var minLng = -180
@@ -58,11 +89,11 @@ function getCoordinate() {
 
   var dataArray = []
 
-  for (let i = 0; i < 1000; i++) {
+  for (let i = 0; i < num; i++) {
     var randomLat = Math.random() * (maxLat - minLat + 1) + minLat
     var randomLng = Math.random() * (maxLng - minLng + 1) + minLng
 
-    dataArray.push({ id: "id" + i, lng: randomLng, lat: randomLat, url: iconUrlInput.value || positionPic })
+    dataArray.push({ id: "id" + i, lng: randomLng, lat: randomLat, url: iconUrlInput.value || positionPic,radius:500000 })
   }
   return dataArray
 }
@@ -82,7 +113,7 @@ onMounted(() => {
         <el-button type="primary" @click="renderLine">渲染线</el-button>
       </div>
       <div class="line">
-        <el-button type="primary" @click="renderArea">渲染面</el-button>
+        <el-button type="primary" @click="renderPolygon">渲染面</el-button>
       </div>
       <div class="line">
         <el-button type="primary" @click="renderCircle">渲染圆</el-button>
