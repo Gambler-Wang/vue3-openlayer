@@ -21,10 +21,11 @@ const { layoutMode } = storeToRefs(settingsStore)
   <div class="layout-logo-container" :class="{ collapse: props.collapse, 'layout-mode-top': layoutMode === 'top' }">
     <transition name="layout-logo-fade">
       <router-link v-if="props.collapse" key="collapse" to="/">
-        <img :src="logo" class="layout-logo" />
+        <!-- <img :src="logo" class="layout-logo" /> -->
+        <div class="c-white">Map</div>
       </router-link>
       <router-link v-else key="expand" to="/">
-        <div class="c-white">Map</div>
+        <div class="c-white">地图基础常见示例</div>
         <!-- <img :src="layoutMode !== 'left' ? logoText2 : logoText1" class="layout-logo-text" /> -->
       </router-link>
     </transition>
