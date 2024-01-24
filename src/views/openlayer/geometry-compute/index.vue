@@ -13,52 +13,14 @@ let isOpenDraw = ref<boolean>(false)
 let drawType = ref<string>('LineString')
 let drawTypeList = ref<any[]>([
   {
-    value:'Point',
-    key:'Point',
-    isFreehand:true,
-    label:'点'
-  },
-  {
     value:'LineString',
     key:'LineString',
-    isFreehand:true,
-    label:'自由线'
+    label:'测距'
   },
   {
     value:'Polygon',
     key:'Polygon',
-    isFreehand:true,
-    label:'自由多边形'
-  },
-  {
-    value:'Circle',
-    key:'Circle',
-    isFreehand:true,
-    label:'圆'
-  },
-  {
-    value:'_LineString',
-    key:'_LineString',
-    isFreehand:false,
-    label:'标准直线'
-  },
-  {
-    value:'_Polygon',
-    key:'_Polygon',
-    isFreehand:false,
-    label:'标准多边形'
-  },
-  {
-    value:'Rectangle',
-    key:'Rectangle',
-    isFreehand:false,
-    label:'矩形'
-  },
-  {
-    value:'Square',
-    key:'Square',
-    isFreehand:false,
-    label:'正方形'
+    label:'侧面'
   },
 ])
 
@@ -67,26 +29,12 @@ const loadMap = (type: any) => {
 }
 const handleSelectChange = (val: any) =>{
   if(!isOpenDraw.value) return
-  const obj = drawTypeList.value.find(el=>{
-    return el.value === val
-  })
-  const params = {
-    type:val,
-    freehand:obj.isFreehand
-  }
-  OlMapRef.value?.drawGeometry(params)
+  OlMapRef.value?.computeDistance({},val)
 }
 
 const handleSwitchChange = (val:any)=>{
   if(val){
-    const obj = drawTypeList.value.find(el=>{
-      return el.value === drawType.value
-    })
-    const params = {
-      type:obj.value,
-      freehand:obj.isFreehand
-    }
-    OlMapRef.value?.drawGeometry(params)
+    OlMapRef.value?.computeDistance({},drawType.value)
   }else{
     OlMapRef.value?.closeDrawFn()
   }
@@ -105,7 +53,7 @@ onMounted(() => {
 <template>
   <div class="geometry-compute-container">
     <div class="left-box">
-      <el-divider> 几何绘制 </el-divider>
+      <el-divider> 测距/侧面 </el-divider>
       <div class="line">
         <el-switch inactive-text="关闭绘制" active-text="开启绘制"  v-model="isOpenDraw" @change="handleSwitchChange" />
       </div>

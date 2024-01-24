@@ -9,6 +9,7 @@ import * as Geom from 'ol/geom'
 import * as Layer from "ol/layer"
 import * as Interaction from "ol/interaction"
 import {createRegularPolygon,createBox} from "ol/interaction/draw"
+import {getArea, getLength} from 'ol/sphere';
 import Overlay from 'ol/overlay'
 import { getTileLayer, MapTypeProject, isMapEPSG3857 } from "./tileLayerConifg"
 import { PointDataInterface,LabelStyleInterface,BaseStyleInterface } from "./customInterface"
@@ -37,6 +38,7 @@ let drawObj:any = ref(null)
 // 绘制矢量图层
 let drawVectorSource:any= new Source.Vector()
 let drawVectorLayer:any= null
+const segmentStyles = [createDistanceTipStyle()]
 
 // 初始化地图
 const initMap = (mapType: string = "tianditu") => {
@@ -278,6 +280,30 @@ const drawGeometry=(obj:any)=>{
     OlMapObj.value.updateSize()
   }
 }
+// 测距
+const computeDistance=(lineStyle:BaseStyleInterface,type:string)=>{
+  closeDrawFn();
+  const drawLineStyle = createDistanceLineStyle()
+  const vectorLineStyle = createVectorStyle(lineStyle)
+  const params = {
+    type,
+    freehand:false,
+    geometryFunction:null,
+    maxPoints:null,
+    styleFn: (feature: { getGeometry: () => any })=>{ return distanceStyleCb(feature,drawLineStyle)},
+  }
+  drawObj.value = createInteraction(params)
+  OlMapObj.value.addInteraction(drawObj.value)
+  if(!drawVectorLayer){
+    drawVectorLayer = new Layer.Vector({
+        source: drawVectorSource,
+        style: (feature: { getGeometry: () => any })=>{ return distanceStyleCb(feature,vectorLineStyle)}
+    });
+    OlMapObj.value.addLayer(drawVectorLayer);
+  }else{
+    OlMapObj.value.updateSize()
+  }
+}
 
 // 增加弹窗
 const addPopupOverlay = (dom: any) =>{
@@ -294,6 +320,73 @@ const clearAll = ()=>{
   OlMapObj.value.removeLayer(drawVectorLayer)
 }
 
+// 测距样式回调显示
+function distanceStyleCb(feature: { getGeometry: () => any },lineStyle: OlStyle.Style){
+  const arr = []
+  const geometry =feature.getGeometry();
+  const type = geometry.getType();
+  let lastPoint = null;
+  let label = null;
+  let line = null;
+  arr.push(lineStyle)
+  if(type === 'LineString' ){
+    lastPoint = new Geom.Point(geometry.getLastCoordinate());
+    label = formatLength(geometry);
+    line = geometry;
+  }else if(type === 'Polygon'){
+    lastPoint = geometry.getInteriorPoint();
+    label = formatArea(geometry);
+    line = new Geom.LineString(geometry.getCoordinates()[0]);
+  }
+  if(line){
+    let count = 0;
+    line.forEachSegment(function (a: number, b: number) {
+      let distanceTipStyle = createDistanceTipStyle();
+      const segment = new Geom.LineString([a, b]);
+      const label = formatLength(segment);
+      if (segmentStyles.length - 1 < count) {
+        segmentStyles.push(distanceTipStyle);
+      }
+      const segmentPoint = new Geom.Point(segment.getCoordinateAt(0.5));
+      segmentStyles[count].setGeometry(segmentPoint);
+      segmentStyles[count].getText().setText(label);
+      arr.push(segmentStyles[count]);
+      count++;
+    });
+  }
+  if (label) {
+    let distanceTipStyle = createDistanceTipStyle();
+    distanceTipStyle.setGeometry(lastPoint);
+    distanceTipStyle.getText().setText(label);
+    arr.push(distanceTipStyle);
+  }
+  return arr
+}
+
+// 测量长度
+function formatLength (line: Geom.Geometry) {
+  const length = getLength(line);
+  let output;
+  if (length > 100) {
+    output = Math.round((length / 1000) * 100) / 100 + ' km';
+  } else {
+    output = Math.round(length * 100) / 100 + ' m';
+  }
+  return output;
+};
+
+// 测量面积
+function formatArea (polygon: Geom.Geometry) {
+  const area = getArea(polygon);
+  let output;
+  if (area > 10000) {
+    output = Math.round((area / 1000000) * 100) / 100 + ' km²'
+  } else {
+    output = Math.round(area * 100) / 100 + ' m²';
+  }
+  return output;
+};
+
 // 关闭绘制功能
 function closeDrawFn(){
   if(drawObj.value){
@@ -301,14 +394,15 @@ function closeDrawFn(){
   }
 }
 
-// 创建自由绘制类对象
+// 创建绘制类对象
 function createInteraction(obj:any){
   return new Interaction.Draw({
       source: drawVectorSource,
       type: obj.type,
       freehand: obj.freehand,
       geometryFunction:obj.geometryFunction,
-      maxPoints:obj.maxPoints
+      maxPoints:obj.maxPoints,
+      style: obj.styleFn,
   });
 }
 
@@ -366,17 +460,17 @@ function createText (style:LabelStyleInterface,text: any){
   })
 }
 
-// 创建样式
+// 创建基本绘制矢量样式
 function createVectorStyle(style:BaseStyleInterface){
   return new OlStyle.Style({
     //填充色
     fill: new OlStyle.Fill({
-      color: style.fillColor
+      color: style.fillColor || 'rgba(0,0,0,.2)'
     }),
     //边线颜色
     stroke: new OlStyle.Stroke({
-      color: style.strokeColor,
-      width: style.strokeWidth
+      color: style.strokeColor || '#409eff',
+      width: style.strokeWidth || 2
     }),
     //形状
     image: new OlStyle.Circle({
@@ -386,6 +480,56 @@ function createVectorStyle(style:BaseStyleInterface){
       })
     })
   })
+}
+
+// 创建测距tip样式
+function createDistanceTipStyle(){
+  return new OlStyle.Style({
+    text: new OlStyle.Text({
+      font: '12px Calibri,sans-serif',
+      fill: new OlStyle.Fill({
+        color: 'rgba(255, 255, 255, 1)',
+      }),
+      backgroundFill: new OlStyle.Fill({
+        color: 'rgba(0, 0, 0, 0.4)',
+      }),
+      padding: [2, 2, 2, 2],
+      textBaseline: 'bottom',
+      offsetY: -12,
+    }),
+    image: new OlStyle.RegularShape({
+      radius: 6,
+      points: 3,
+      angle: Math.PI,
+      displacement: [0, 8],
+      fill: new OlStyle.Fill({
+        color: 'rgba(0, 0, 0, 0.4)',
+      }),
+    }),
+  });
+}
+
+// 创建测距划线样式
+function createDistanceLineStyle(){
+  return new OlStyle.Style({
+      fill: new OlStyle.Fill({
+      color: 'rgba(255, 255, 255, 0.2)',
+    }),
+    stroke: new OlStyle.Stroke({
+      color: 'rgba(0, 0, 0, 0.5)',
+      lineDash: [10, 10],
+      width: 2,
+    }),
+    image: new OlStyle.Circle({
+      radius: 5,
+      stroke: new OlStyle.Stroke({
+        color: 'rgba(0, 0, 0, 0.7)',
+      }),
+      fill: new OlStyle.Fill({
+        color: 'rgba(255, 255, 255, 0.2)',
+      }),
+    }),
+  });
 }
 
 // 创建图标标注
@@ -441,6 +585,7 @@ defineExpose({
   renderGeometry,
   drawGeometry,
   closeDrawFn,
+  computeDistance,
   trCoordSystem,
   clearAll,
 })
