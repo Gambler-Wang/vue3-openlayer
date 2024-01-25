@@ -324,7 +324,7 @@ const setZommSlderControl = (type: ControlType,isOpen:boolean)=>{
   if(isOpen){
     let control = null
     if(type ==='mousePosition'){
-      control = controlConfig[type]('mouse-position',MapTypeProject[currentMapType]);
+      control = controlConfig[type]('mouse-position','EPSG:4326');
     }else if(type ==='overviewMap'){
       control = controlConfig[type](getTileLayer(currentMapType));
     }else if(type === 'zoomToExtent'){
@@ -662,7 +662,7 @@ defineExpose({
     position: absolute;
     top: 5px;
     right: 0;
-    width: 300px;
+    width: 180px;
     height: 20px;
     z-index: 2000;
   }
