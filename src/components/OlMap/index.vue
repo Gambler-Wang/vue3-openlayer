@@ -46,7 +46,7 @@ let drawObj:any = ref(null)
 // 绘制矢量图层
 let drawVectorSource:any= new Source.Vector()
 let drawVectorLayer:any= null
-const segmentStyles = [createDistanceTipStyle()]
+// const segmentStyles = [createDistanceTipStyle()]
 
 // 初始化地图
 const initMap = (mapType: string = "tianditu") => {
@@ -389,14 +389,19 @@ function distanceStyleCb(feature: { getGeometry: () => any },lineStyle: OlStyle.
       let distanceTipStyle = createDistanceTipStyle();
       const segment = new Geom.LineString([a, b]);
       const label = formatLength(segment);
-      if (segmentStyles.length - 1 < count) {
-        segmentStyles.push(distanceTipStyle);
-      }
       const segmentPoint = new Geom.Point(segment.getCoordinateAt(0.5));
-      segmentStyles[count].setGeometry(segmentPoint);
-      segmentStyles[count].getText().setText(label);
-      arr.push(segmentStyles[count]);
-      count++;
+      distanceTipStyle.setGeometry(segmentPoint);
+      distanceTipStyle.getText().setText(label);
+      arr.push(distanceTipStyle);
+      // const segmentStyles = [createDistanceTipStyle()]
+      // if (segmentStyles.length - 1 < count) {
+      //   segmentStyles.push(distanceTipStyle);
+      // }
+      // const segmentPoint = new Geom.Point(segment.getCoordinateAt(0.5));
+      // segmentStyles[count].setGeometry(segmentPoint);
+      // segmentStyles[count].getText().setText(label);
+      // arr.push(segmentStyles[count]);
+      // count++;
     });
   }
   if (label) {
