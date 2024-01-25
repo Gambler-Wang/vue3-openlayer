@@ -204,6 +204,9 @@ onMounted(()=>{
       :deep(p){
         margin: 10px 0 6px 0;
       }
+      max-width:200px;
+      white-space: normal;
+      word-wrap: break-word;
     }
     .ol-popup-closer:after {
       content: "✖";
