@@ -13,8 +13,9 @@ import {getArea, getLength} from 'ol/sphere';
 import Overlay from 'ol/overlay'
 import { getTileLayer, MapTypeProject, isMapEPSG3857 } from "./tileLayerConifg"
 import { PointDataInterface,LabelStyleInterface,BaseStyleInterface } from "./customInterface"
+import controlConfig  from './controlConfig'
 import { ElMessage } from "element-plus"
-import { fromLonLat, Projection, transform } from "ol/proj"
+import { fromLonLat,transformExtent,Projection, transform } from "ol/proj"
 import { reactive, ref, watch, onMounted } from "vue"
 
 defineOptions({
@@ -23,10 +24,17 @@ defineOptions({
 })
 const props = defineProps({
   mapId:{
-    type: String, // 类型
-    required: false, // 是否必传
-    default: 'map' //值 ‘gaode’,'baidu','tianditu','custom'
+    type: String,
+    required: false,
+    default: 'map'
   },
+  extentRange:{
+    type: Array,
+    required: false, // 是否必传
+    default: function(){
+      return [116.30144842, 38.5285152, 120.45160558, 39.4366038]
+    }
+  }
 })
 let OlMapObj: any = ref(null)
 let currentMapType:string = 'tianditu'
@@ -280,7 +288,13 @@ const drawGeometry=(obj:any)=>{
     OlMapObj.value.updateSize()
   }
 }
-// 测距
+
+/**
+ * @description: 测距,测面
+ * @param {*} lineStyle 画线样式
+ * @param {*} type 画多边形还是直线 LineString | Polygon
+ * @return {*}
+ */
 const computeDistance=(lineStyle:BaseStyleInterface,type:string)=>{
   closeDrawFn();
   const drawLineStyle = createDistanceLineStyle()
@@ -302,6 +316,31 @@ const computeDistance=(lineStyle:BaseStyleInterface,type:string)=>{
     OlMapObj.value.addLayer(drawVectorLayer);
   }else{
     OlMapObj.value.updateSize()
+  }
+}
+// 添加缩放控件
+type ControlType = 'zoomSlider' | 'mousePosition' | 'scaleLine' | 'overviewMap' | 'zoomToExtent';
+const setZommSlderControl = (type: ControlType,isOpen:boolean)=>{
+  if(isOpen){
+    let control = null
+    if(type ==='mousePosition'){
+      control = controlConfig[type]('mouse-position',MapTypeProject[currentMapType]);
+    }else if(type ==='overviewMap'){
+      control = controlConfig[type](getTileLayer(currentMapType));
+    }else if(type === 'zoomToExtent'){
+      let numArr: number[] = props.extentRange.map(el=>{
+        return Number(el)
+      })
+      const extentRange = trExtent(numArr)
+      control = controlConfig[type](extentRange);
+    }else{
+      control = controlConfig[type]()
+    }
+    control.set('id',type);
+    OlMapObj.value.addControl(control)
+  }else{
+    const control = getRemoveControl('id',type)
+    OlMapObj.value.removeControl(control)
   }
 }
 
@@ -404,6 +443,18 @@ function createInteraction(obj:any){
       maxPoints:obj.maxPoints,
       style: obj.styleFn,
   });
+}
+
+// 找到对应的空间并删除
+function getRemoveControl(id: any,value: any){
+  let control = undefined
+  const controlList =OlMapObj.value.getControls()
+  controlList.forEach((el: { get: (arg0: any) => any })=>{
+    if(el.get(id)===value){
+      control = el
+    }
+  })
+  return control
 }
 
 // 创建点要素
@@ -569,6 +620,10 @@ function createPopup(dom: any){
 function trCoordSystem (coordinate: Array<number>) {
   return isMapEPSG3857(currentMapType) ? fromLonLat(coordinate) : coordinate
 }
+// 返回对应坐标系的范围
+function trExtent (coordinate: number[]) {
+  return isMapEPSG3857(currentMapType) ? transformExtent(coordinate,'EPSG:4326','EPSG:3857') : coordinate
+}
 
 onMounted(() => {
   // initMap()
@@ -586,19 +641,65 @@ defineExpose({
   drawGeometry,
   closeDrawFn,
   computeDistance,
+  setZommSlderControl,
   trCoordSystem,
   clearAll,
 })
 </script>
 
 <template>
-  <div class="olmap-container" :id="mapId"></div>
+  <div class="olmap-container" :id="mapId">
+    <div id="mouse-position"></div>
+  </div>
 </template>
 
 <style lang="scss" scoped>
 .olmap-container {
   width: 100%;
   height: 100%;
+  position: relative;
+  #mouse-position {
+    position: absolute;
+    top: 5px;
+    right: 0;
+    width: 300px;
+    height: 20px;
+    z-index: 2000;
+  }
+  .custom-mouse-position {
+    color: rgb(0,0,0);
+    font-size: 16px;
+    font-family: "微软雅黑";
+  }
 }
 </style>
-.
+<style>
+  /*=S 自定义鹰眼样式 */
+  .ol-custom-overviewmap, .ol-custom-overviewmap.ol-uncollapsible {
+    bottom: auto;
+    left: auto;
+    right: 0;
+    bottom: 0;
+  }
+  /* 鹰眼控件展开时控件外框的样式 */
+  .ol-custom-overviewmap:not(.ol-collapsed) {
+      border: 1px solid black;
+  }
+  /* 鹰眼控件中地图容器样式 */
+  .ol-custom-overviewmap .ol-overviewmap-map {
+      border: none;
+      width: 300px;
+  }
+  /* 鹰眼控件中显示当前窗口中主图区域的边框 */
+  .ol-custom-overviewmap .ol-overviewmap-box {
+      border: 2px solid red;
+  }
+  /* 鹰眼控件展开时其控件按钮图标的样式 */
+  .ol-custom-overviewmap:not(.ol-collapsed) button {
+      bottom: auto;
+      left: auto;
+      right: 1px;
+      top: 1px;
+  }
+  /*=E 自定义鹰眼样式 */
+</style>
