@@ -320,6 +320,12 @@ const computeDistance=(lineStyle:BaseStyleInterface,type:string)=>{
 }
 // 添加缩放控件
 type ControlType = 'zoomSlider' | 'mousePosition' | 'scaleLine' | 'overviewMap' | 'zoomToExtent';
+/**
+ * @description:
+ * @param {*} type ControlType 控件类型
+ * @param {*} isOpen boolean 开启/关闭
+ * @return {*}
+ */
 const setZommSlderControl = (type: ControlType,isOpen:boolean)=>{
   if(isOpen){
     let control = null
