@@ -90,6 +90,24 @@ export const constantRoutes: RouteRecordRaw[] = [
         },
       },
       {
+        path: "map-layer",
+        name: "OpenLayerMapLayer",
+        component: () => import("@/views/openlayer/map-layer/index.vue"),
+        meta: {
+          title: "图层选择",
+          keepAlive: true
+        },
+      },
+      {
+        path: "set-center",
+        name: "OpenLayerSetCenter",
+        component: () => import("@/views/openlayer/set-center/index.vue"),
+        meta: {
+          title: "设置中心点",
+          keepAlive: true
+        },
+      },
+      {
         path: "render-icon-label",
         component: () => import("@/views/openlayer/render-label/icon-label/index.vue"),
         name: "OpenLayerIconLabel",
@@ -126,6 +144,15 @@ export const constantRoutes: RouteRecordRaw[] = [
         }
       },
       {
+        path: "render-clusters-label",
+        component: () => import("@/views/openlayer/render-label/clusters-label/index.vue"),
+        name: "OpenLayerClustersLabel",
+        meta: {
+          title: "聚合标注",
+          keepAlive: true
+        }
+      },
+      {
         path: "render-geometry",
         name: "OpenLayerRenderGeometry",
         component: () => import("@/views/openlayer/render-geometry/index.vue"),
@@ -149,6 +176,33 @@ export const constantRoutes: RouteRecordRaw[] = [
         component: () => import("@/views/openlayer/geometry-compute/index.vue"),
         meta: {
           title: "测距,侧面",
+          keepAlive: true
+        },
+      },
+      {
+        path: "point-warning",
+        name: "OpenLayerPointWarning",
+        component: () => import("@/views/openlayer/warning/point-warning/index.vue"),
+        meta: {
+          title: "点预警",
+          keepAlive: true
+        },
+      },
+      {
+        path: "area-warning",
+        name: "OpenLayerAreaWarning",
+        component: () => import("@/views/openlayer/warning/area-warning/index.vue"),
+        meta: {
+          title: "区域预警",
+          keepAlive: true
+        },
+      },
+      {
+        path: "track-play",
+        name: "OpenLayerTrackPlay",
+        component: () => import("@/views/openlayer/track-play/index.vue"),
+        meta: {
+          title: "轨迹回放 ",
           keepAlive: true
         },
       },

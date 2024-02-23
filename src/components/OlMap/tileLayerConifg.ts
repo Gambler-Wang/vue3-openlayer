@@ -66,18 +66,22 @@ export const getTileLayer = (type='tianditu',customObj=null)=>{
         className:'underlay-map-container',
         source: new Source.XYZ({
           crossOrigin: 'Anonymous',
-          url: 'http://t0.tianditu.com/DataServer?T=vec_w&x={x}&y={y}&l={z}&tk=bc15a8dd532a9027225c6e572c73433c',
+          // bc15a8dd532a9027225c6e572c73433c
+          url: 'http://t0.tianditu.com/DataServer?T=vec_w&x={x}&y={y}&l={z}&tk=50273c8649e44d54bad87d09042c1834',
           wrapX: false
         })
       })
+      tileLayerVec.set('name','天地图矢量图层')
       let tileLayerCva = new TileLayer({
         className:'underlay-map-container2',
         source: new Source.XYZ({
           crossOrigin: 'Anonymous',
-          url: 'http://t0.tianditu.com/DataServer?T=cva_w&x={x}&y={y}&l={z}&tk=bc15a8dd532a9027225c6e572c73433c',
+          // bc15a8dd532a9027225c6e572c73433c
+          url: 'http://t0.tianditu.com/DataServer?T=cva_w&x={x}&y={y}&l={z}&tk=50273c8649e44d54bad87d09042c1834',
           wrapX: false
         })
       })
+      tileLayerCva.set('name','天地图矢量注记图层')
       tileLayerArr = [tileLayerVec,tileLayerCva];
       break;
     case MapType.CUSTOM:
@@ -140,4 +144,29 @@ const getBaiduSource = ()=>{
     }
   });
   return baiduSource
+}
+
+// 其它图层
+export const getOtherLayer = ()=>{
+  let tileLayerImg = new TileLayer({
+    className:'underlay-map-container-tdtyxtc',
+    source: new Source.XYZ({
+      crossOrigin: 'Anonymous',
+      // bc15a8dd532a9027225c6e572c73433c
+      url: 'http://t0.tianditu.com/DataServer?T=img_w&x={x}&y={y}&l={z}&tk=50273c8649e44d54bad87d09042c1834',
+      wrapX: false
+    })
+  })
+  tileLayerImg.set('name','天地图影像图层')
+  let tileLayerCia = new TileLayer({
+    className:'underlay-map-container-tdtyxzjtc',
+    source: new Source.XYZ({
+      crossOrigin: 'Anonymous',
+      // bc15a8dd532a9027225c6e572c73433c
+      url: 'http://t0.tianditu.com/DataServer?T=cia_w&x={x}&y={y}&l={z}&tk=50273c8649e44d54bad87d09042c1834',
+      wrapX: false
+    })
+  })
+  tileLayerCia.set('name','天地图影像注记图层')
+  return [tileLayerImg,tileLayerCia];
 }

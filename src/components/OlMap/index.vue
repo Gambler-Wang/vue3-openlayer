@@ -11,12 +11,14 @@ import * as Interaction from "ol/interaction"
 import {createRegularPolygon,createBox} from "ol/interaction/draw"
 import {getArea, getLength} from 'ol/sphere';
 import Overlay from 'ol/overlay'
-import { getTileLayer, MapTypeProject, isMapEPSG3857 } from "./tileLayerConifg"
-import { PointDataInterface,LabelStyleInterface,BaseStyleInterface } from "./customInterface"
-import controlConfig  from './controlConfig'
 import { ElMessage } from "element-plus"
 import { fromLonLat,transformExtent,Projection, transform } from "ol/proj"
 import { reactive, ref, watch, onMounted } from "vue"
+import { getTileLayer, MapTypeProject, isMapEPSG3857 } from "./tileLayerConifg"
+import { PointDataInterface,LabelStyleInterface,BaseStyleInterface,CircleFeaturePropertiesType} from "./customInterface"
+import controlConfig  from './controlConfig'
+import {pointAnimation,areaAinimation,trackMoveAnimation,initNextMoveTime} from './animation'
+import RenderEvent from "ol/render/Event"
 
 defineOptions({
   // 命名当前组件
@@ -47,8 +49,21 @@ let drawObj:any = ref(null)
 let drawVectorSource:any= new Source.Vector()
 let drawVectorLayer:any= null
 // const segmentStyles = [createDistanceTipStyle()]
-
+// 点动画方法集合
+let pointAnimateEntryArr: any[]=[]
+// 面动画方法集合
+let areaAnimateEntryArr: any[]=[]
+// 轨迹动画
+let trackMoveFn: ((event: RenderEvent) => void) | null = null
+// 聚合物数据源
+let clusterVectorSource:any= null
 // 初始化地图
+/**
+ * @description: 初始化地图
+ * @param {*} mapType gaode baidu tianditu custom
+ * @return {*} openlayer实例对象
+ */
+
 const initMap = (mapType: string = "tianditu") => {
   currentMapType = mapType
   if (OlMapObj.value) {
@@ -77,6 +92,26 @@ const initMap = (mapType: string = "tianditu") => {
     })
   })
   return OlMapObj.value
+}
+
+/**
+ * @description: 设置中心店
+ * @param {*} coordinate array 坐标
+ * @param {*} zoom number 缩放级别
+ * @return {*}
+ */
+const setMapCenter = (coordinate: any,zoom: any) =>{
+  const mapView = OlMapObj.value.getView();
+  if(!mapView) return
+  mapView.animate(
+    {
+      center:trCoordSystem(coordinate),
+    },
+    {
+      zoom,
+    },
+
+  )
 }
 
 /**+
@@ -112,8 +147,8 @@ const addPicLabel = (arr: PointDataInterface[],isClean:boolean = false) => {
   }else{
     OlMapObj.value.updateSize()
   }
-  console.log(vectorSource.getFeatures());
 }
+
 /**
  * @description:
  * @param {*} arr 渲染的点数据
@@ -149,6 +184,7 @@ const addTextLabel = (arr: PointDataInterface[],style:LabelStyleInterface,isClea
   }
 
 }
+
 /**
  * @description:增加点icon和点text
  * @param {*} arr 渲染的点数据
@@ -187,6 +223,61 @@ const addTextPicLabel = (arr: PointDataInterface[],style:LabelStyleInterface,isC
     OlMapObj.value.updateSize()
   }
 }
+/**
+ * @description: 聚合点渲染
+ * @param {*} arr 点位数组
+ * @param {*} isClean 渲染是否清空上次渲染
+ * @return {*}
+ */
+const renderCluster = (arr: PointDataInterface[],isClean:boolean = false)=>{
+  addPicLabel(arr,isClean)
+  clusterVectorSource = new Source.Cluster({
+    distance:40,
+    source: vectorSource
+  });
+  var styleCache:any = {};
+  //矢量标注图层
+  vectorLayer.setSource(clusterVectorSource)
+  vectorLayer.setStyle(function (feature: { get: (arg0: string) => { getProperties: () => any }[] }, resolution: any) {
+    var size = feature.get('features').length;
+    var style = styleCache[size];
+    if (!style) {
+      const clusturStyle = new OlStyle.Style({
+        image: new OlStyle.Circle({
+          radius: 10,
+          stroke: new OlStyle.Stroke({
+            color: '#fff'
+          }),
+          fill: new OlStyle.Fill({
+            color: '#3399CC'
+          })
+        }),
+        text: new OlStyle.Text({
+          text: size.toString(),
+          fill: new OlStyle.Fill({
+            color: '#fff'
+          })
+        })
+      })
+      if(size===1){
+        const featureData = feature.get('features')[0].getProperties()
+        style = [
+          new OlStyle.Style({
+            image:createIcon(featureData.attribute.url)
+          })
+        ];
+      }else{
+        style = [
+          clusturStyle
+        ];
+      }
+      styleCache[size] = style;
+    }
+    return style;
+  })
+  OlMapObj.value.updateSize()
+}
+
 /**
  * @description: 绘制图形
  * @param {*} type <string> Point,LineString,Polygon,Circle,Rectangle,Square
@@ -228,7 +319,7 @@ const renderGeometry = (type: string,data:any[],style:BaseStyleInterface)=>{
       let arr = [el.lng,el.lat]
       handleArr.push(arr)
     })
-    let sourceFeature = createPolygon(handleArr)
+    let sourceFeature = createPolygon(handleArr,data[0])
     const styleObj = createVectorStyle(style)
     sourceFeature.setStyle(styleObj)
     sourceFeatureArr.push(sourceFeature)
@@ -244,13 +335,13 @@ const renderGeometry = (type: string,data:any[],style:BaseStyleInterface)=>{
     return
   }
   //矢量标注的数据源
-  vectorSource.addFeatures(sourceFeatureArr)
+  drawVectorSource.addFeatures(sourceFeatureArr)
   //矢量标注图层
-  if(!vectorLayer){
-    vectorLayer = new Layer.Vector({
-        source: vectorSource
+  if(!drawVectorLayer){
+    drawVectorLayer = new Layer.Vector({
+        source: drawVectorSource
     });
-    OlMapObj.value.addLayer(vectorLayer);
+    OlMapObj.value.addLayer(drawVectorLayer);
   }else{
     OlMapObj.value.updateSize()
   }
@@ -318,10 +409,10 @@ const computeDistance=(lineStyle:BaseStyleInterface,type:string)=>{
     OlMapObj.value.updateSize()
   }
 }
-// 添加缩放控件
+
 type ControlType = 'zoomSlider' | 'mousePosition' | 'scaleLine' | 'overviewMap' | 'zoomToExtent';
 /**
- * @description:
+ * @description:添加缩放控件
  * @param {*} type ControlType 控件类型
  * @param {*} isOpen boolean 开启/关闭
  * @return {*}
@@ -349,6 +440,78 @@ const setZommSlderControl = (type: ControlType,isOpen:boolean)=>{
     OlMapObj.value.removeControl(control)
   }
 }
+/**
+ * @description: 取消点预警
+ * @param {*} isClean 是否清理点标注
+ * @return {*}
+ */
+const cancelPointWarning = (isClean: Boolean)=>{
+  if(vectorLayer){
+    pointAnimateEntryArr.forEach(el=>{
+      vectorLayer.un('postrender',el)
+    })
+    pointAnimateEntryArr=[]
+    if(isClean){
+      vectorSource.clear(true)
+      OlMapObj.value.updateSize()
+    }
+  }
+}
+/**
+ * @description: 通知点预警
+ * @param {*} arr 点数组
+ * @return {*}
+ */
+const notifyPointWarning = (arr:any)=>{
+  cancelPointWarning(true)
+  addPicLabel(arr,true)
+  arr.forEach((el: { lng: any; lat: any },index: number) => {
+    pointAnimateEntryArr[index]=(event: RenderEvent)=>{
+      const coordinate = [el.lng,el.lat]
+      const point = new Geom.Point(trCoordSystem(coordinate))
+      pointAnimation(event,point,OlMapObj.value)
+    }
+    vectorLayer.on('postrender', pointAnimateEntryArr[index])
+  });
+}
+
+/**
+ * @description: 取消区域预警
+ * @param {*} isClean 是否清理区域矢量
+ * @return {*}
+ */
+ const cancelAreaWarning = (isClean: Boolean=true)=>{
+  if(drawVectorLayer){
+    areaAnimateEntryArr.forEach(el=>{
+      drawVectorLayer.un('postrender',el)
+    })
+    areaAnimateEntryArr=[]
+    if(isClean){
+      drawVectorSource.clear(true)
+      OlMapObj.value.updateSize()
+    }
+  }
+}
+// 通知区域预警
+const notifyAreaWarning = (type: string,data:any[],style:BaseStyleInterface)=>{
+  renderGeometry(type, data, style)
+  const features = drawVectorSource.getFeatures()
+  const filterFeatures = features.filter((el: { getProperties: () => any })=>{
+    let oldObj = el.getProperties();
+    return !oldObj.isRenderAnimation
+  })
+  const feature = filterFeatures[filterFeatures.length-1]
+  console.log(filterFeatures)
+  console.log(feature)
+  const gemo = feature.getGeometry()
+  areaAnimateEntryArr.push(
+    (event: RenderEvent)=>{
+      areaAinimation(event,gemo,OlMapObj.value)
+    }
+  )
+  drawVectorLayer.on('postrender', areaAnimateEntryArr[areaAnimateEntryArr.length-1])
+  feature.setProperties({isRenderAnimation:true})
+}
 
 // 增加弹窗
 const addPopupOverlay = (dom: any) =>{
@@ -363,6 +526,49 @@ const clearAll = ()=>{
   OlMapObj.value.removeLayer(vectorLayer)
   drawVectorSource.clear(true)
   OlMapObj.value.removeLayer(drawVectorLayer)
+}
+
+const startMoveTrack = (trackLine: any,movePoint: any)=>{
+  if(trackMoveFn) return
+  trackMoveFn = (event: RenderEvent)=>{
+    trackMoveAnimation(event,trackLine,movePoint,OlMapObj.value)
+  }
+  initNextMoveTime(Date.now())
+  drawVectorLayer?.on("postrender",trackMoveFn);
+  OlMapObj.value.render()
+}
+const endMoveTrack = (trackLine: any,movePoint: any)=>{
+  drawVectorLayer?.un("postrender",trackMoveFn);
+  trackMoveFn = null
+}
+
+/**
+ * @description: 创建轨迹线
+ * @param {*} arr 经纬度点位数组
+ * @return {*}
+ */
+function createTrack(arr: any[]){
+  const trackLine = createLine(arr)
+  const startPoint = createPoint(arr[0])
+  const endPoint = createPoint(arr[arr.length-1])
+  const movePoint = createPoint(arr[0])
+  movePoint.setStyle(createVectorStyle({
+    imageCircleRadius:5,
+    imageCircleFillColor:'#000'
+  }))
+  const featureArr = [trackLine,startPoint,endPoint,movePoint]
+  //矢量标注的数据源
+  drawVectorSource.addFeatures(featureArr)
+  //矢量标注图层
+  if(!drawVectorLayer){
+    drawVectorLayer = new Layer.Vector({
+        source: drawVectorSource
+    });
+    OlMapObj.value.addLayer(drawVectorLayer);
+  }else{
+    OlMapObj.value.updateSize()
+  }
+  return {trackLine,startPoint,endPoint,movePoint}
 }
 
 // 测距样式回调显示
@@ -499,9 +705,12 @@ function createPolygon(arr: any[],obj:any={}){
 }
 
 // 创建圆要素
-function createCircle(arr:Array<number>,obj:any={}){
+function createCircle(arr:Array<number>,obj:CircleFeaturePropertiesType={
+  radius:500000
+}){
   return new Feature({
-    geometry: new Geom.Circle(trCoordSystem(arr), obj.radius)
+    geometry: new Geom.Circle(trCoordSystem(arr), obj.radius),
+    attribute:obj
   });
 }
 
@@ -523,7 +732,7 @@ function createText (style:LabelStyleInterface,text: any){
 }
 
 // 创建基本绘制矢量样式
-function createVectorStyle(style:BaseStyleInterface){
+function createVectorStyle(style:BaseStyleInterface = {}){
   return new OlStyle.Style({
     //填充色
     fill: new OlStyle.Fill({
@@ -643,16 +852,25 @@ onMounted(() => {
 
 defineExpose({
   initMap,
+  setMapCenter,
   OlMapObj,
   addPicLabel,
   addTextLabel,
   addTextPicLabel,
   addPopupOverlay,
+  renderCluster,
   renderGeometry,
   drawGeometry,
   closeDrawFn,
   computeDistance,
   setZommSlderControl,
+  notifyPointWarning,
+  cancelPointWarning,
+  notifyAreaWarning,
+  cancelAreaWarning,
+  createTrack,
+  endMoveTrack,
+  startMoveTrack,
   trCoordSystem,
   clearAll,
 })

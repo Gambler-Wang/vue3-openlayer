@@ -28,3 +28,8 @@ export  interface BaseStyleInterface {
   // 其他
   [key: string]: any;
 }
+
+export type CircleFeaturePropertiesType = {
+  radius: number;
+  [key: string]: any;
+};

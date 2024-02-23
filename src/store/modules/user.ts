@@ -34,8 +34,12 @@ export const useUserStore = defineStore("user", () => {
   const getInfo = async () => {
     let data:any = {};
     try {
-      const res = await getUserInfoApi()
-      data = res.data
+      // const res = await getUserInfoApi()
+      // data = res.data
+      data={
+        roles:['admin'],
+        username:'admin'
+      }
     } catch (error) {
       data={
         roles:['admin'],
